@@ -107,6 +107,7 @@
 #endif
 
 #include "raylib.h"                 // Declares module functions
+#include "input_script_runtime.h"   // Scripted keyboard input runtime declarations
 
 #include "config.h"                 // Defines module configuration flags
 
@@ -280,6 +281,8 @@
 #ifndef FILE_FILTER_TAG_DIR_ONLY
     #define FILE_FILTER_TAG_DIR_ONLY   "DIR*"       // Filter to include directories on directory scan
 #endif                                              // NOTE: Used in ScanDirectoryFiles(), LoadDirectoryFilesEx() and GetDirectoryFileCountEx()
+
+#include "input_script_runtime.c"    // Scripted keyboard input runtime implementation
 
 // Flags bitwise operation macros
 #define FLAG_SET(n, f) ((n) |= (f))
@@ -3847,6 +3850,66 @@ void PlayAutomationEvent(AutomationEvent event)
 // Module Functions Definition: Input Handling: Keyboard
 //----------------------------------------------------------------------------------
 
+// Reset scripted keyboard input runtime state and loaded events
+void ResetInputScript(void)
+{
+    InputScriptRuntimeReset();
+}
+
+// Load scripted keyboard events (copied and sorted by frame)
+void LoadInputScriptEvents(const InputScriptEvent *events, int count)
+{
+    InputScriptRuntimeLoadEvents(events, count);
+}
+
+// Enable/disable scripted keyboard input runtime
+void SetInputScriptEnabled(bool enabled)
+{
+    InputScriptRuntimeSetEnabled(enabled);
+}
+
+// Set scripted keyboard merge mode
+void SetInputScriptMode(InputScriptMode mode)
+{
+    InputScriptRuntimeSetMode(mode);
+}
+
+// Advance scripted keyboard runtime to the specified frame
+void AdvanceInputScriptFrame(int frame)
+{
+    InputScriptRuntimeAdvanceFrame(frame);
+}
+
+// Check scripted key pressed state for current frame
+bool InputScriptIsKeyPressed(int key)
+{
+    return InputScriptRuntimeIsKeyPressed(key);
+}
+
+// Check scripted key down state for current frame
+bool InputScriptIsKeyDown(int key)
+{
+    return InputScriptRuntimeIsKeyDown(key);
+}
+
+// Check scripted key released state for current frame
+bool InputScriptIsKeyReleased(int key)
+{
+    return InputScriptRuntimeIsKeyReleased(key);
+}
+
+// Check scripted key up state for current frame
+bool InputScriptIsKeyUp(int key)
+{
+    return InputScriptRuntimeIsKeyUp(key);
+}
+
+// Get scripted count of currently pressed keys
+int GetInputScriptKeyDownCount(void)
+{
+    return InputScriptRuntimeGetKeyDownCount();
+}
+
 // Check if a key has been pressed once
 bool IsKeyPressed(int key)
 {
@@ -3856,6 +3919,13 @@ bool IsKeyPressed(int key)
     {
         if ((CORE.Input.Keyboard.previousKeyState[key] == 0) && (CORE.Input.Keyboard.currentKeyState[key] == 1)) pressed = true;
     }
+
+    if (!InputScriptRuntimeEnabled()) return pressed;
+
+    bool scriptedPressed = InputScriptRuntimeIsKeyPressed(key);
+    if (InputScriptRuntimeMode() == INPUT_SCRIPT_MODE_SCRIPT_ONLY) return scriptedPressed;
+
+    pressed = pressed || scriptedPressed;
 
     return pressed;
 }
@@ -3883,6 +3953,13 @@ bool IsKeyDown(int key)
         if (CORE.Input.Keyboard.currentKeyState[key] == 1) down = true;
     }
 
+    if (!InputScriptRuntimeEnabled()) return down;
+
+    bool scriptedDown = InputScriptRuntimeIsKeyDown(key);
+    if (InputScriptRuntimeMode() == INPUT_SCRIPT_MODE_SCRIPT_ONLY) return scriptedDown;
+
+    down = down || scriptedDown;
+
     return down;
 }
 
@@ -3895,6 +3972,13 @@ bool IsKeyReleased(int key)
     {
         if ((CORE.Input.Keyboard.previousKeyState[key] == 1) && (CORE.Input.Keyboard.currentKeyState[key] == 0)) released = true;
     }
+
+    if (!InputScriptRuntimeEnabled()) return released;
+
+    bool scriptedReleased = InputScriptRuntimeIsKeyReleased(key);
+    if (InputScriptRuntimeMode() == INPUT_SCRIPT_MODE_SCRIPT_ONLY) return scriptedReleased;
+
+    released = released || scriptedReleased;
 
     return released;
 }
@@ -3909,6 +3993,13 @@ bool IsKeyUp(int key)
         if (CORE.Input.Keyboard.currentKeyState[key] == 0) up = true;
     }
 
+    if (!InputScriptRuntimeEnabled()) return up;
+
+    bool scriptedUp = InputScriptRuntimeIsKeyUp(key);
+    if (InputScriptRuntimeMode() == INPUT_SCRIPT_MODE_SCRIPT_ONLY) return scriptedUp;
+
+    up = up && scriptedUp;
+
     return up;
 }
 
@@ -3920,6 +4011,13 @@ int GetKeyDownCount(void)
     {
         if (CORE.Input.Keyboard.currentKeyState[key] == 1) value++;
     }
+
+    if (!InputScriptRuntimeEnabled()) return value;
+
+    int scriptedValue = InputScriptRuntimeGetKeyDownCount();
+    if (InputScriptRuntimeMode() == INPUT_SCRIPT_MODE_SCRIPT_ONLY) return scriptedValue;
+
+    value += scriptedValue;
 
     return value;
 }

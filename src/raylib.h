@@ -532,6 +532,26 @@ typedef struct AutomationEventList {
     AutomationEvent *events;        // Events entries
 } AutomationEventList;
 
+// Input script event type (for scripted keyboard playback)
+typedef enum {
+    INPUT_SCRIPT_EVENT_KEY_DOWN = 0,   // Set key state to down (also triggers pressed once)
+    INPUT_SCRIPT_EVENT_KEY_UP,         // Set key state to up (also triggers released once)
+    INPUT_SCRIPT_EVENT_KEY_PRESS       // Trigger pressed once without changing held state
+} InputScriptEventType;
+
+// Input script mode
+typedef enum {
+    INPUT_SCRIPT_MODE_MERGE = 0,       // Merge scripted input with real input
+    INPUT_SCRIPT_MODE_SCRIPT_ONLY      // Use only scripted input for keyboard queries
+} InputScriptMode;
+
+// Input script event
+typedef struct InputScriptEvent {
+    int frame;                         // Event frame to apply
+    int type;                          // Event type (InputScriptEventType)
+    int key;                           // Key code (KeyboardKey)
+} InputScriptEvent;
+
 //----------------------------------------------------------------------------------
 // Enumerators Definition
 //----------------------------------------------------------------------------------
@@ -1179,6 +1199,17 @@ RLAPI void SetAutomationEventBaseFrame(int frame);                              
 RLAPI void StartAutomationEventRecording(void);                                         // Start recording automation events (AutomationEventList must be set)
 RLAPI void StopAutomationEventRecording(void);                                          // Stop recording automation events
 RLAPI void PlayAutomationEvent(AutomationEvent event);                                  // Play a recorded automation event
+
+RLAPI void ResetInputScript(void);                                                      // Reset scripted keyboard input runtime state and loaded events
+RLAPI void LoadInputScriptEvents(const InputScriptEvent *events, int count);            // Load scripted keyboard events (copied and sorted by frame)
+RLAPI void SetInputScriptEnabled(bool enabled);                                         // Enable/disable scripted keyboard input runtime
+RLAPI void SetInputScriptMode(InputScriptMode mode);                                    // Set scripted keyboard merge mode
+RLAPI void AdvanceInputScriptFrame(int frame);                                          // Advance scripted keyboard runtime to the specified frame
+RLAPI bool InputScriptIsKeyPressed(int key);                                            // Check scripted key pressed state for current frame
+RLAPI bool InputScriptIsKeyDown(int key);                                               // Check scripted key down state for current frame
+RLAPI bool InputScriptIsKeyReleased(int key);                                           // Check scripted key released state for current frame
+RLAPI bool InputScriptIsKeyUp(int key);                                                 // Check scripted key up state for current frame
+RLAPI int GetInputScriptKeyDownCount(void);                                             // Get scripted count of currently pressed keys
 
 //------------------------------------------------------------------------------------
 // Input Handling Functions (Module: core)
