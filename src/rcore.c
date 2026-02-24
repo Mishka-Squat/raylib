@@ -4701,3 +4701,5 @@ const char *TextFormat(const char *text, ...)
 }
 
 #endif // !SUPPORT_MODULE_RTEXT
+
+#include "rdebug.c.incl"

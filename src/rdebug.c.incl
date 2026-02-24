@@ -1,0 +1,60 @@
+void DebugGenerateKeyDown(int key)
+{
+    CORE.Input.Keyboard.currentKeyState[key] = true;
+
+    if (CORE.Input.Keyboard.previousKeyState[key] == false)
+    {
+        if (CORE.Input.Keyboard.keyPressedQueueCount < MAX_KEY_PRESSED_QUEUE)
+        {
+            // Add character to the queue
+            CORE.Input.Keyboard.keyPressedQueue[CORE.Input.Keyboard.keyPressedQueueCount] = key;
+            CORE.Input.Keyboard.keyPressedQueueCount++;
+        }
+    }
+}
+
+void DebugGenerateKeyUp(int key)
+{
+    // Input event
+    CORE.Input.Keyboard.currentKeyState[key] = false;
+}
+
+void DebugGenerateMouseDown(int key)
+{
+    CORE.Input.Mouse.currentButtonState[key] = true;
+}
+
+void DebugGenerateMouseUp(int key)
+{
+    CORE.Input.Mouse.currentButtonState[key] = false;
+}
+
+void DebugGenerateMousePosition(float x, float y)
+{
+    CORE.Input.Mouse.currentPosition.x = x;
+    CORE.Input.Mouse.currentPosition.y = y;
+}
+
+void DebugGenerateMouseWheelMove(float x, float y)
+{
+    CORE.Input.Mouse.currentWheelMove.x = x;
+    CORE.Input.Mouse.currentWheelMove.y = y;
+}
+
+/*
+            case INPUT_TOUCH_UP: CORE.Input.Touch.currentTouchState[event.params[0]] = false; break;            // param[0]: id
+            case INPUT_TOUCH_DOWN: CORE.Input.Touch.currentTouchState[event.params[0]] = true; break;           // param[0]: id
+            case INPUT_TOUCH_POSITION:      // param[0]: id, param[1]: x, param[2]: y
+            {
+                CORE.Input.Touch.position[event.params[0]].x = (float)event.params[1];
+                CORE.Input.Touch.position[event.params[0]].y = (float)event.params[2];
+            } break;
+            case INPUT_GAMEPAD_CONNECT: CORE.Input.Gamepad.ready[event.params[0]] = true; break;                // param[0]: gamepad
+            case INPUT_GAMEPAD_DISCONNECT: CORE.Input.Gamepad.ready[event.params[0]] = false; break;            // param[0]: gamepad
+            case INPUT_GAMEPAD_BUTTON_UP: CORE.Input.Gamepad.currentButtonState[event.params[0]][event.params[1]] = false; break;    // param[0]: gamepad, param[1]: button
+            case INPUT_GAMEPAD_BUTTON_DOWN: CORE.Input.Gamepad.currentButtonState[event.params[0]][event.params[1]] = true; break;   // param[0]: gamepad, param[1]: button
+            case INPUT_GAMEPAD_AXIS_MOTION: // param[0]: gamepad, param[1]: axis, param[2]: delta
+            {
+                CORE.Input.Gamepad.axisState[event.params[0]][event.params[1]] = ((float)event.params[2]/32768.0f);
+            } break;
+*/

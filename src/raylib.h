@@ -26,7 +26,7 @@
 *       - One default RenderBatch is loaded on rlglInit()->rlLoadRenderBatch() [rlgl] (OpenGL 3.3 or ES2)
 *
 *   DEPENDENCIES:
-*       [rcore] Depends on the selected platform backend, check rcore.c header for details 
+*       [rcore] Depends on the selected platform backend, check rcore.c header for details
 *       [rlgl] glad/glad_gles2 (David Herberth - github.com/Dav1dde/glad) for OpenGL extensions loading
 *       [raudio] miniaudio (David Reid - github.com/mackron/miniaudio) for audio device/context management
 *
@@ -39,7 +39,7 @@
 *       [rtextures] stb_image_write (Sean Barret) for image writing (BMP, TGA, PNG, JPG)
 *       [rtextures] stb_image_resize2 (Sean Barret) for image resizing algorithms
 *       [rtextures] stb_perlin (Sean Barret) for Perlin Noise image generation
-*       [rtextures] rl_gputex (Ramon Santamaria) for GPU-compressed texture formats 
+*       [rtextures] rl_gputex (Ramon Santamaria) for GPU-compressed texture formats
 *       [rtext] stb_truetype (Sean Barret) for ttf fonts loading
 *       [rtext] stb_rect_pack (Sean Barret) for rectangles packing
 *       [rmodels] par_shapes (Philip Rideout) for parametric 3d shapes generation
@@ -1196,6 +1196,9 @@ RLAPI int GetCharPressed(void);                               // Get char presse
 RLAPI const char *GetKeyName(int key);                        // Get name of a QWERTY key on the current keyboard layout (eg returns string 'q' for KEY_A on an AZERTY keyboard)
 RLAPI void SetExitKey(int key);                               // Set a custom key to exit program (default is ESC)
 
+RLAPI void DebugGenerateKeyDown(int key);
+RLAPI void DebugGenerateKeyUp(int key);
+
 // Input-related functions: gamepads
 RLAPI bool IsGamepadAvailable(int gamepad);                   // Check if a gamepad is available
 RLAPI const char *GetGamepadName(int gamepad);                // Get gamepad internal name id
@@ -1226,6 +1229,11 @@ RLAPI float GetMouseWheelMove(void);                          // Get mouse wheel
 RLAPI Vector2 GetMouseWheelMoveV(void);                       // Get mouse wheel movement for both X and Y
 RLAPI void SetMouseCursor(int cursor);                        // Set mouse cursor
 RLAPI void SetMouseCursorImage(Image image, int xhot, int yhot); // Set mouse cursor image
+
+RLAPI void DebugGenerateMouseDown(int key);
+RLAPI void DebugGenerateMouseUp(int key);
+RLAPI void DebugGenerateMousePosition(float x, float y);
+RLAPI void DebugGenerateMouseWheelMove(float x, float y);
 
 // Input-related functions: touch
 RLAPI int GetTouchX(void);                                    // Get touch position X for touch point 0 (relative to screen size)
