@@ -1212,6 +1212,12 @@ RLAPI float GetGamepadAxisMovement(int gamepad, int axis);    // Get movement va
 RLAPI int SetGamepadMappings(const char *mappings);           // Set internal gamepad mappings (SDL_GameControllerDB)
 RLAPI void SetGamepadVibration(int gamepad, float leftMotor, float rightMotor, float duration); // Set gamepad vibration for both motors (duration in seconds)
 
+RLAPI void DebugGenerateGamepadConnect(int gamepad);
+RLAPI void DebugGenerateGamepadDisconnect(int gamepad);
+RLAPI void DebugGenerateGamepadButtonUp(int gamepad, int key);
+RLAPI void DebugGenerateGamepadButtonDown(int gamepad, int key);
+RLAPI void DebugGenerateGamepadAxisMotion(int gamepad, int axis, float delta);
+
 // Input-related functions: mouse
 RLAPI int GetMouseButtonDownCount(void);                      // Get buttons count of currently pressed mouse buttons. Doesn't count touches.
 RLAPI bool IsMouseButtonPressed(int button);                  // Check if a mouse button has been pressed once
@@ -1241,6 +1247,10 @@ RLAPI int GetTouchY(void);                                    // Get touch posit
 RLAPI Vector2 GetTouchPosition(int index);                    // Get touch position XY for a touch point index (relative to screen size)
 RLAPI int GetTouchPointId(int index);                         // Get touch point identifier for given index
 RLAPI int GetTouchPointCount(void);                           // Get number of touch points
+
+RLAPI void DebugGenerateTouchDown(int index);
+RLAPI void DebugGenerateTouchUp(int index);
+RLAPI void DebugGenerateTouchPosition(int index, float x, float y);
 
 //------------------------------------------------------------------------------------
 // Gestures and Touch Handling Functions (Module: rgestures)

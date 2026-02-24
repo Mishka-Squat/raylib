@@ -41,20 +41,43 @@ void DebugGenerateMouseWheelMove(float x, float y)
     CORE.Input.Mouse.currentWheelMove.y = y;
 }
 
-/*
-            case INPUT_TOUCH_UP: CORE.Input.Touch.currentTouchState[event.params[0]] = false; break;            // param[0]: id
-            case INPUT_TOUCH_DOWN: CORE.Input.Touch.currentTouchState[event.params[0]] = true; break;           // param[0]: id
-            case INPUT_TOUCH_POSITION:      // param[0]: id, param[1]: x, param[2]: y
-            {
-                CORE.Input.Touch.position[event.params[0]].x = (float)event.params[1];
-                CORE.Input.Touch.position[event.params[0]].y = (float)event.params[2];
-            } break;
-            case INPUT_GAMEPAD_CONNECT: CORE.Input.Gamepad.ready[event.params[0]] = true; break;                // param[0]: gamepad
-            case INPUT_GAMEPAD_DISCONNECT: CORE.Input.Gamepad.ready[event.params[0]] = false; break;            // param[0]: gamepad
-            case INPUT_GAMEPAD_BUTTON_UP: CORE.Input.Gamepad.currentButtonState[event.params[0]][event.params[1]] = false; break;    // param[0]: gamepad, param[1]: button
-            case INPUT_GAMEPAD_BUTTON_DOWN: CORE.Input.Gamepad.currentButtonState[event.params[0]][event.params[1]] = true; break;   // param[0]: gamepad, param[1]: button
-            case INPUT_GAMEPAD_AXIS_MOTION: // param[0]: gamepad, param[1]: axis, param[2]: delta
-            {
-                CORE.Input.Gamepad.axisState[event.params[0]][event.params[1]] = ((float)event.params[2]/32768.0f);
-            } break;
-*/
+void DebugGenerateTouchDown(int index)
+{
+    CORE.Input.Touch.currentTouchState[index] = true;
+}
+
+void DebugGenerateTouchUp(int index)
+{
+    CORE.Input.Touch.currentTouchState[index] = false;
+}
+
+void DebugGenerateTouchPosition(int index, float x, float y)
+{
+    CORE.Input.Touch.position[index].x = (float)x;
+    CORE.Input.Touch.position[index].y = (float)y;
+}
+
+void DebugGenerateGamepadConnect(int gamepad)
+{
+    CORE.Input.Gamepad.ready[gamepad] = true;
+}
+
+void DebugGenerateGamepadDisconnect(int gamepad)
+{
+    CORE.Input.Gamepad.ready[gamepad] = false;
+}
+
+void DebugGenerateGamepadButtonUp(int gamepad, int key)
+{
+    CORE.Input.Gamepad.currentButtonState[gamepad][key] = false;
+}
+
+void DebugGenerateGamepadButtonDown(int gamepad, int key)
+{
+    CORE.Input.Gamepad.currentButtonState[gamepad][key] = true;
+}
+
+void DebugGenerateGamepadAxisMotion(int gamepad, int axis, float delta)
+{
+    CORE.Input.Gamepad.axisState[gamepad][axis] = delta;
+}
