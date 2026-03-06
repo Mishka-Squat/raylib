@@ -1316,6 +1316,7 @@ void PollInputEvents(void)
     // REF: https://www.codeproject.com/Articles/668404/Programming-for-Multi-Touch
     // REF: https://docs.microsoft.com/en-us/windows/win32/wintouch/getting-started-with-multi-touch-messages
     CORE.Input.Touch.position[0] = CORE.Input.Mouse.currentPosition;
+    CORE.Input.Touch.previousPosition[0] = CORE.Input.Mouse.previousPosition;
 
     // Check if gamepads are ready
     // NOTE: Doing it here in case of disconnection

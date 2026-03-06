@@ -1231,6 +1231,7 @@ void PollInputEvents(void)
 
     // Map touch position to mouse position for convenience
     CORE.Input.Touch.position[0] = CORE.Input.Mouse.currentPosition;
+    CORE.Input.Touch.previousPosition[0] = CORE.Input.Mouse.previousPosition;
 
     int touchAction = -1;       // 0-TOUCH_ACTION_UP, 1-TOUCH_ACTION_DOWN, 2-TOUCH_ACTION_MOVE
     bool realTouch = false;     // Flag to differentiate real touch gestures from mouse ones

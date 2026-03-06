@@ -490,7 +490,14 @@ struct AutomationEvent {
 };
 */
 
+static unsigned int automationEventBaseFrame = 0;           // Automation event base frame
+#if AUTOMATION_EVENTS_V2
+static AutomationEventList currentEventList;                // Current automation events list, set by user, keep internal pointer
+static bool automationEventPlaying = false;                 // Playing current automation event list
+static int currentPlayingEventIndex = 0;                    // Current playing event index
+#else
 static AutomationEventList *currentEventList = NULL;        // Current automation events list, set by user, keep internal pointer
+#endif
 static bool automationEventRecording = false;               // Recording automation events flag
 //static short automationEventEnabled = 0b0000001111111111; // TODO: Automation events enabled for recording/playing
 #endif
@@ -514,7 +521,8 @@ static void SetupViewport(int width, int height);           // Set viewport for 
 static void ScanDirectoryFiles(const char *basePath, FilePathList *list, const char *filter, unsigned int expectedFileCount, bool scanSubdirs); // Scan all files and directories in a base path
 
 #if SUPPORT_AUTOMATION_EVENTS
-static void RecordAutomationEvent(void); // Record frame events (to internal events array)
+static void PlayAutomationEvents(void);   // Play frame events (from internal events array)
+static void RecordAutomationEvents(void); // Record frame events (to internal events array)
 #endif
 
 #if defined(_WIN32) && !defined(PLATFORM_DESKTOP_RGFW)
@@ -887,13 +895,17 @@ void EndDrawing(void)
     rlDrawRenderBatchActive();      // Update and draw internal render batch
 
 #if SUPPORT_AUTOMATION_EVENTS
-    if (automationEventRecording) RecordAutomationEvent();    // Event recording
+    if (automationEventRecording) RecordAutomationEvents();     // Event recording
 #endif
 
 #if !SUPPORT_CUSTOM_FRAME_CONTROL
     SwapScreenBuffer();     // Copy back buffer to front buffer (screen)
     FrameTimeControl();     // Frame time control system
     PollInputEvents();      // Poll user events (before next frame update)
+#endif
+
+#if SUPPORT_AUTOMATION_EVENTS
+    if (automationEventPlaying) PlayAutomationEvents();         // Event replay
 #endif
 
 #if SUPPORT_SCREEN_CAPTURE
@@ -1326,7 +1338,7 @@ Shader UnloadShader(Shader shader)
         // NOTE: If shader loading failed, it should be 0
         RL_FREE_NULL(shader.locs);
     }
-	
+
 	return shader;
 }
 
@@ -2773,7 +2785,7 @@ FilePathList UnloadDirectoryFiles(FilePathList files)
 
         RL_FREE_NULL(files.paths);
     }
-	
+
     return files;
 }
 
@@ -2925,7 +2937,7 @@ FilePathList UnloadDroppedFiles(FilePathList files)
         CORE.Window.dropFileCount = 0;
         CORE.Window.dropFilepaths = NULL;
     }
-	
+
     return files;
 }
 
@@ -3696,8 +3708,14 @@ bool ExportAutomationEventList(AutomationEventList list, const char *fileName)
     return success;
 }
 
+// Return active automation event list (internal one)
+AutomationEventList CurrentAutomationEventList()
+{
+    return currentEventList;
+}
+
 // Setup automation event list to record to
-void SetAutomationEventList(AutomationEventList *list)
+void SetAutomationEventList(AutomationEventList list)
 {
 #if SUPPORT_AUTOMATION_EVENTS
     currentEventList = list;
@@ -3707,13 +3725,14 @@ void SetAutomationEventList(AutomationEventList *list)
 // Set automation event internal base frame to start recording
 void SetAutomationEventBaseFrame(int frame)
 {
-    CORE.Time.frameCounter = frame;
+    automationEventBaseFrame = frame;
 }
 
 // Start recording automation events (AutomationEventList must be set)
 void StartAutomationEventRecording(void)
 {
 #if SUPPORT_AUTOMATION_EVENTS
+    automationEventBaseFrame = CORE.Time.frameCounter;
     automationEventRecording = true;
 #endif
 }
@@ -3723,6 +3742,18 @@ void StopAutomationEventRecording(void)
 {
 #if SUPPORT_AUTOMATION_EVENTS
     automationEventRecording = false;
+#endif
+}
+
+// Stop recording automation events
+void PlayAutomationEventList(AutomationEventList list)
+{
+#if SUPPORT_AUTOMATION_EVENTS
+    automationEventRecording = false;
+    currentEventList = list;
+    automationEventBaseFrame = CORE.Time.frameCounter;
+    currentPlayingEventIndex = 0;
+    automationEventPlaying = true;
 #endif
 }
 
@@ -4357,12 +4388,19 @@ static void ScanDirectoryFiles(const char *basePath, FilePathList *files, const 
 }
 
 #if SUPPORT_AUTOMATION_EVENTS
+// Play frame events (from internal events array)
+static void PlayAutomationEvents(void)
+{
+
+}
+
 // Automation event recording
 // Checking events in current frame and save them into currentEventList
 // NOTE: Recording is by default done at EndDrawing(), before PollInputEvents()
-static void RecordAutomationEvent(void)
+static void RecordAutomationEvents(void)
 {
-    if (currentEventList->count == currentEventList->capacity) return;
+    if (currentEventList.count == currentEventList.capacity) return;
+    unsigned int automationEventFrame = CORE.Time.frameCounter - automationEventBaseFrame;
 
     // Keyboard input events recording
     //-------------------------------------------------------------------------------------
@@ -4371,157 +4409,169 @@ static void RecordAutomationEvent(void)
         // Event type: INPUT_KEY_UP (only saved once)
         if (CORE.Input.Keyboard.previousKeyState[key] && !CORE.Input.Keyboard.currentKeyState[key])
         {
-            currentEventList->events[currentEventList->count].frame = CORE.Time.frameCounter;
-            currentEventList->events[currentEventList->count].type = INPUT_KEY_UP;
-            currentEventList->events[currentEventList->count].params[0] = key;
-            currentEventList->events[currentEventList->count].params[1] = 0;
-            currentEventList->events[currentEventList->count].params[2] = 0;
+            currentEventList.events[currentEventList.count].frame = automationEventFrame;
+            currentEventList.events[currentEventList.count].type = INPUT_KEY_UP;
+            currentEventList.events[currentEventList.count].params[0] = key;
+            currentEventList.events[currentEventList.count].params[1] = 0;
+            currentEventList.events[currentEventList.count].params[2] = 0;
 
-            TRACELOG(LOG_INFO, "AUTOMATION: Frame: %i | Event type: INPUT_KEY_UP | Event parameters: %i, %i, %i", currentEventList->events[currentEventList->count].frame, currentEventList->events[currentEventList->count].params[0], currentEventList->events[currentEventList->count].params[1], currentEventList->events[currentEventList->count].params[2]);
-            currentEventList->count++;
+            TRACELOG(LOG_INFO, "AUTOMATION: Frame: %i | Event type: INPUT_KEY_UP | Event parameters: %i, %i, %i", currentEventList.events[currentEventList.count].frame, currentEventList.events[currentEventList.count].params[0], currentEventList.events[currentEventList.count].params[1], currentEventList.events[currentEventList.count].params[2]);
+            currentEventList.count++;
         }
 
-        if (currentEventList->count == currentEventList->capacity) return;    // Security check
+        if (currentEventList.count == currentEventList.capacity) return;    // Security check
 
         // Event type: INPUT_KEY_DOWN
+#if AUTOMATION_EVENTS_V2
+        if (!CORE.Input.Keyboard.previousKeyState[key] && CORE.Input.Keyboard.currentKeyState[key])
+#else
         if (CORE.Input.Keyboard.currentKeyState[key])
+#endif
         {
-            currentEventList->events[currentEventList->count].frame = CORE.Time.frameCounter;
-            currentEventList->events[currentEventList->count].type = INPUT_KEY_DOWN;
-            currentEventList->events[currentEventList->count].params[0] = key;
-            currentEventList->events[currentEventList->count].params[1] = 0;
-            currentEventList->events[currentEventList->count].params[2] = 0;
+            currentEventList.events[currentEventList.count].frame = automationEventFrame;
+            currentEventList.events[currentEventList.count].type = INPUT_KEY_DOWN;
+            currentEventList.events[currentEventList.count].params[0] = key;
+            currentEventList.events[currentEventList.count].params[1] = 0;
+            currentEventList.events[currentEventList.count].params[2] = 0;
 
-            TRACELOG(LOG_INFO, "AUTOMATION: Frame: %i | Event type: INPUT_KEY_DOWN | Event parameters: %i, %i, %i", currentEventList->events[currentEventList->count].frame, currentEventList->events[currentEventList->count].params[0], currentEventList->events[currentEventList->count].params[1], currentEventList->events[currentEventList->count].params[2]);
-            currentEventList->count++;
+            TRACELOG(LOG_INFO, "AUTOMATION: Frame: %i | Event type: INPUT_KEY_DOWN | Event parameters: %i, %i, %i", currentEventList.events[currentEventList.count].frame, currentEventList.events[currentEventList.count].params[0], currentEventList.events[currentEventList.count].params[1], currentEventList.events[currentEventList.count].params[2]);
+            currentEventList.count++;
         }
 
-        if (currentEventList->count == currentEventList->capacity) return;    // Security check
+        if (currentEventList.count == currentEventList.capacity) return;    // Security check
     }
     //-------------------------------------------------------------------------------------
 
-    // Mouse input currentEventList->events recording
+    // Mouse input currentEventList.events recording
     //-------------------------------------------------------------------------------------
     for (int button = 0; button < MAX_MOUSE_BUTTONS; button++)
     {
         // Event type: INPUT_MOUSE_BUTTON_UP
         if (CORE.Input.Mouse.previousButtonState[button] && !CORE.Input.Mouse.currentButtonState[button])
         {
-            currentEventList->events[currentEventList->count].frame = CORE.Time.frameCounter;
-            currentEventList->events[currentEventList->count].type = INPUT_MOUSE_BUTTON_UP;
-            currentEventList->events[currentEventList->count].params[0] = button;
-            currentEventList->events[currentEventList->count].params[1] = 0;
-            currentEventList->events[currentEventList->count].params[2] = 0;
+            currentEventList.events[currentEventList.count].frame = automationEventFrame;
+            currentEventList.events[currentEventList.count].type = INPUT_MOUSE_BUTTON_UP;
+            currentEventList.events[currentEventList.count].params[0] = button;
+            currentEventList.events[currentEventList.count].params[1] = 0;
+            currentEventList.events[currentEventList.count].params[2] = 0;
 
-            TRACELOG(LOG_INFO, "AUTOMATION: Frame: %i | Event type: INPUT_MOUSE_BUTTON_UP | Event parameters: %i, %i, %i", currentEventList->events[currentEventList->count].frame, currentEventList->events[currentEventList->count].params[0], currentEventList->events[currentEventList->count].params[1], currentEventList->events[currentEventList->count].params[2]);
-            currentEventList->count++;
+            TRACELOG(LOG_INFO, "AUTOMATION: Frame: %i | Event type: INPUT_MOUSE_BUTTON_UP | Event parameters: %i, %i, %i", currentEventList.events[currentEventList.count].frame, currentEventList.events[currentEventList.count].params[0], currentEventList.events[currentEventList.count].params[1], currentEventList.events[currentEventList.count].params[2]);
+            currentEventList.count++;
         }
 
-        if (currentEventList->count == currentEventList->capacity) return;    // Security check
+        if (currentEventList.count == currentEventList.capacity) return;    // Security check
 
         // Event type: INPUT_MOUSE_BUTTON_DOWN
+#if AUTOMATION_EVENTS_V2
+        if (!CORE.Input.Mouse.previousButtonState[button] && CORE.Input.Mouse.currentButtonState[button])
+#else
         if (CORE.Input.Mouse.currentButtonState[button])
+#endif
         {
-            currentEventList->events[currentEventList->count].frame = CORE.Time.frameCounter;
-            currentEventList->events[currentEventList->count].type = INPUT_MOUSE_BUTTON_DOWN;
-            currentEventList->events[currentEventList->count].params[0] = button;
-            currentEventList->events[currentEventList->count].params[1] = 0;
-            currentEventList->events[currentEventList->count].params[2] = 0;
+            currentEventList.events[currentEventList.count].frame = automationEventFrame;
+            currentEventList.events[currentEventList.count].type = INPUT_MOUSE_BUTTON_DOWN;
+            currentEventList.events[currentEventList.count].params[0] = button;
+            currentEventList.events[currentEventList.count].params[1] = 0;
+            currentEventList.events[currentEventList.count].params[2] = 0;
 
-            TRACELOG(LOG_INFO, "AUTOMATION: Frame: %i | Event type: INPUT_MOUSE_BUTTON_DOWN | Event parameters: %i, %i, %i", currentEventList->events[currentEventList->count].frame, currentEventList->events[currentEventList->count].params[0], currentEventList->events[currentEventList->count].params[1], currentEventList->events[currentEventList->count].params[2]);
-            currentEventList->count++;
+            TRACELOG(LOG_INFO, "AUTOMATION: Frame: %i | Event type: INPUT_MOUSE_BUTTON_DOWN | Event parameters: %i, %i, %i", currentEventList.events[currentEventList.count].frame, currentEventList.events[currentEventList.count].params[0], currentEventList.events[currentEventList.count].params[1], currentEventList.events[currentEventList.count].params[2]);
+            currentEventList.count++;
         }
 
-        if (currentEventList->count == currentEventList->capacity) return;    // Security check
+        if (currentEventList.count == currentEventList.capacity) return;    // Security check
     }
 
     // Event type: INPUT_MOUSE_POSITION (only saved if changed)
     if (((int)CORE.Input.Mouse.currentPosition.x != (int)CORE.Input.Mouse.previousPosition.x) ||
         ((int)CORE.Input.Mouse.currentPosition.y != (int)CORE.Input.Mouse.previousPosition.y))
     {
-        currentEventList->events[currentEventList->count].frame = CORE.Time.frameCounter;
-        currentEventList->events[currentEventList->count].type = INPUT_MOUSE_POSITION;
-        currentEventList->events[currentEventList->count].params[0] = (int)CORE.Input.Mouse.currentPosition.x;
-        currentEventList->events[currentEventList->count].params[1] = (int)CORE.Input.Mouse.currentPosition.y;
-        currentEventList->events[currentEventList->count].params[2] = 0;
+        currentEventList.events[currentEventList.count].frame = automationEventFrame;
+        currentEventList.events[currentEventList.count].type = INPUT_MOUSE_POSITION;
+        currentEventList.events[currentEventList.count].params[0] = (int)CORE.Input.Mouse.currentPosition.x;
+        currentEventList.events[currentEventList.count].params[1] = (int)CORE.Input.Mouse.currentPosition.y;
+        currentEventList.events[currentEventList.count].params[2] = 0;
 
-        TRACELOG(LOG_INFO, "AUTOMATION: Frame: %i | Event type: INPUT_MOUSE_POSITION | Event parameters: %i, %i, %i", currentEventList->events[currentEventList->count].frame, currentEventList->events[currentEventList->count].params[0], currentEventList->events[currentEventList->count].params[1], currentEventList->events[currentEventList->count].params[2]);
-        currentEventList->count++;
+        TRACELOG(LOG_INFO, "AUTOMATION: Frame: %i | Event type: INPUT_MOUSE_POSITION | Event parameters: %i, %i, %i", currentEventList.events[currentEventList.count].frame, currentEventList.events[currentEventList.count].params[0], currentEventList.events[currentEventList.count].params[1], currentEventList.events[currentEventList.count].params[2]);
+        currentEventList.count++;
 
-        if (currentEventList->count == currentEventList->capacity) return;    // Security check
+        if (currentEventList.count == currentEventList.capacity) return;    // Security check
     }
 
     // Event type: INPUT_MOUSE_WHEEL_MOTION
     if (((int)CORE.Input.Mouse.currentWheelMove.x != (int)CORE.Input.Mouse.previousWheelMove.x) ||
         ((int)CORE.Input.Mouse.currentWheelMove.y != (int)CORE.Input.Mouse.previousWheelMove.y))
     {
-        currentEventList->events[currentEventList->count].frame = CORE.Time.frameCounter;
-        currentEventList->events[currentEventList->count].type = INPUT_MOUSE_WHEEL_MOTION;
-        currentEventList->events[currentEventList->count].params[0] = (int)CORE.Input.Mouse.currentWheelMove.x;
-        currentEventList->events[currentEventList->count].params[1] = (int)CORE.Input.Mouse.currentWheelMove.y;
-        currentEventList->events[currentEventList->count].params[2] = 0;
+        currentEventList.events[currentEventList.count].frame = automationEventFrame;
+        currentEventList.events[currentEventList.count].type = INPUT_MOUSE_WHEEL_MOTION;
+        currentEventList.events[currentEventList.count].params[0] = (int)CORE.Input.Mouse.currentWheelMove.x;
+        currentEventList.events[currentEventList.count].params[1] = (int)CORE.Input.Mouse.currentWheelMove.y;
+        currentEventList.events[currentEventList.count].params[2] = 0;
 
-        TRACELOG(LOG_INFO, "AUTOMATION: Frame: %i | Event type: INPUT_MOUSE_WHEEL_MOTION | Event parameters: %i, %i, %i", currentEventList->events[currentEventList->count].frame, currentEventList->events[currentEventList->count].params[0], currentEventList->events[currentEventList->count].params[1], currentEventList->events[currentEventList->count].params[2]);
-        currentEventList->count++;
+        TRACELOG(LOG_INFO, "AUTOMATION: Frame: %i | Event type: INPUT_MOUSE_WHEEL_MOTION | Event parameters: %i, %i, %i", currentEventList.events[currentEventList.count].frame, currentEventList.events[currentEventList.count].params[0], currentEventList.events[currentEventList.count].params[1], currentEventList.events[currentEventList.count].params[2]);
+        currentEventList.count++;
 
-        if (currentEventList->count == currentEventList->capacity) return;    // Security check
+        if (currentEventList.count == currentEventList.capacity) return;    // Security check
     }
     //-------------------------------------------------------------------------------------
 
-    // Touch input currentEventList->events recording
+    // Touch input currentEventList.events recording
     //-------------------------------------------------------------------------------------
     for (int id = 0; id < MAX_TOUCH_POINTS; id++)
     {
         // Event type: INPUT_TOUCH_UP
         if (CORE.Input.Touch.previousTouchState[id] && !CORE.Input.Touch.currentTouchState[id])
         {
-            currentEventList->events[currentEventList->count].frame = CORE.Time.frameCounter;
-            currentEventList->events[currentEventList->count].type = INPUT_TOUCH_UP;
-            currentEventList->events[currentEventList->count].params[0] = id;
-            currentEventList->events[currentEventList->count].params[1] = 0;
-            currentEventList->events[currentEventList->count].params[2] = 0;
+            currentEventList.events[currentEventList.count].frame = automationEventFrame;
+            currentEventList.events[currentEventList.count].type = INPUT_TOUCH_UP;
+            currentEventList.events[currentEventList.count].params[0] = id;
+            currentEventList.events[currentEventList.count].params[1] = 0;
+            currentEventList.events[currentEventList.count].params[2] = 0;
 
-            TRACELOG(LOG_INFO, "AUTOMATION: Frame: %i | Event type: INPUT_TOUCH_UP | Event parameters: %i, %i, %i", currentEventList->events[currentEventList->count].frame, currentEventList->events[currentEventList->count].params[0], currentEventList->events[currentEventList->count].params[1], currentEventList->events[currentEventList->count].params[2]);
-            currentEventList->count++;
+            TRACELOG(LOG_INFO, "AUTOMATION: Frame: %i | Event type: INPUT_TOUCH_UP | Event parameters: %i, %i, %i", currentEventList.events[currentEventList.count].frame, currentEventList.events[currentEventList.count].params[0], currentEventList.events[currentEventList.count].params[1], currentEventList.events[currentEventList.count].params[2]);
+            currentEventList.count++;
         }
 
-        if (currentEventList->count == currentEventList->capacity) return;    // Security check
+        if (currentEventList.count == currentEventList.capacity) return;    // Security check
 
         // Event type: INPUT_TOUCH_DOWN
+#if AUTOMATION_EVENTS_V2
+        if (!CORE.Input.Touch.previousTouchState[id] && CORE.Input.Touch.currentTouchState[id])
+#else
         if (CORE.Input.Touch.currentTouchState[id])
+#endif
         {
-            currentEventList->events[currentEventList->count].frame = CORE.Time.frameCounter;
-            currentEventList->events[currentEventList->count].type = INPUT_TOUCH_DOWN;
-            currentEventList->events[currentEventList->count].params[0] = id;
-            currentEventList->events[currentEventList->count].params[1] = 0;
-            currentEventList->events[currentEventList->count].params[2] = 0;
+            currentEventList.events[currentEventList.count].frame = automationEventFrame;
+            currentEventList.events[currentEventList.count].type = INPUT_TOUCH_DOWN;
+            currentEventList.events[currentEventList.count].params[0] = id;
+            currentEventList.events[currentEventList.count].params[1] = 0;
+            currentEventList.events[currentEventList.count].params[2] = 0;
 
-            TRACELOG(LOG_INFO, "AUTOMATION: Frame: %i | Event type: INPUT_TOUCH_DOWN | Event parameters: %i, %i, %i", currentEventList->events[currentEventList->count].frame, currentEventList->events[currentEventList->count].params[0], currentEventList->events[currentEventList->count].params[1], currentEventList->events[currentEventList->count].params[2]);
-            currentEventList->count++;
+            TRACELOG(LOG_INFO, "AUTOMATION: Frame: %i | Event type: INPUT_TOUCH_DOWN | Event parameters: %i, %i, %i", currentEventList.events[currentEventList.count].frame, currentEventList.events[currentEventList.count].params[0], currentEventList.events[currentEventList.count].params[1], currentEventList.events[currentEventList.count].params[2]);
+            currentEventList.count++;
         }
 
-        if (currentEventList->count == currentEventList->capacity) return;    // Security check
+        if (currentEventList.count == currentEventList.capacity) return;    // Security check
 
         // Event type: INPUT_TOUCH_POSITION
         if (((int)CORE.Input.Touch.position[id].x != (int)CORE.Input.Touch.previousPosition[id].x) ||
             ((int)CORE.Input.Touch.position[id].y != (int)CORE.Input.Touch.previousPosition[id].y))
         {
-            currentEventList->events[currentEventList->count].frame = CORE.Time.frameCounter;
-            currentEventList->events[currentEventList->count].type = INPUT_TOUCH_POSITION;
-            currentEventList->events[currentEventList->count].params[0] = id;
-            currentEventList->events[currentEventList->count].params[1] = (int)CORE.Input.Touch.position[id].x;
-            currentEventList->events[currentEventList->count].params[2] = (int)CORE.Input.Touch.position[id].y;
+            currentEventList.events[currentEventList.count].frame = automationEventFrame;
+            currentEventList.events[currentEventList.count].type = INPUT_TOUCH_POSITION;
+            currentEventList.events[currentEventList.count].params[0] = id;
+            currentEventList.events[currentEventList.count].params[1] = (int)CORE.Input.Touch.position[id].x;
+            currentEventList.events[currentEventList.count].params[2] = (int)CORE.Input.Touch.position[id].y;
 
-            TRACELOG(LOG_INFO, "AUTOMATION: Frame: %i | Event type: INPUT_TOUCH_POSITION | Event parameters: %i, %i, %i", currentEventList->events[currentEventList->count].frame, currentEventList->events[currentEventList->count].params[0], currentEventList->events[currentEventList->count].params[1], currentEventList->events[currentEventList->count].params[2]);
-            currentEventList->count++;
+            TRACELOG(LOG_INFO, "AUTOMATION: Frame: %i | Event type: INPUT_TOUCH_POSITION | Event parameters: %i, %i, %i", currentEventList.events[currentEventList.count].frame, currentEventList.events[currentEventList.count].params[0], currentEventList.events[currentEventList.count].params[1], currentEventList.events[currentEventList.count].params[2]);
+            currentEventList.count++;
         }
 
 
-        if (currentEventList->count == currentEventList->capacity) return;    // Security check
+        if (currentEventList.count == currentEventList.capacity) return;    // Security check
     }
     //-------------------------------------------------------------------------------------
 
-    // Gamepad input currentEventList->events recording
+    // Gamepad input currentEventList.events recording
     //-------------------------------------------------------------------------------------
     for (int gamepad = 0; gamepad < MAX_GAMEPADS; gamepad++)
     {
@@ -4548,32 +4598,36 @@ static void RecordAutomationEvent(void)
             // Event type: INPUT_GAMEPAD_BUTTON_UP
             if (CORE.Input.Gamepad.previousButtonState[gamepad][button] && !CORE.Input.Gamepad.currentButtonState[gamepad][button])
             {
-                currentEventList->events[currentEventList->count].frame = CORE.Time.frameCounter;
-                currentEventList->events[currentEventList->count].type = INPUT_GAMEPAD_BUTTON_UP;
-                currentEventList->events[currentEventList->count].params[0] = gamepad;
-                currentEventList->events[currentEventList->count].params[1] = button;
-                currentEventList->events[currentEventList->count].params[2] = 0;
+                currentEventList.events[currentEventList.count].frame = automationEventFrame;
+                currentEventList.events[currentEventList.count].type = INPUT_GAMEPAD_BUTTON_UP;
+                currentEventList.events[currentEventList.count].params[0] = gamepad;
+                currentEventList.events[currentEventList.count].params[1] = button;
+                currentEventList.events[currentEventList.count].params[2] = 0;
 
-                TRACELOG(LOG_INFO, "AUTOMATION: Frame: %i | Event type: INPUT_GAMEPAD_BUTTON_UP | Event parameters: %i, %i, %i", currentEventList->events[currentEventList->count].frame, currentEventList->events[currentEventList->count].params[0], currentEventList->events[currentEventList->count].params[1], currentEventList->events[currentEventList->count].params[2]);
-                currentEventList->count++;
+                TRACELOG(LOG_INFO, "AUTOMATION: Frame: %i | Event type: INPUT_GAMEPAD_BUTTON_UP | Event parameters: %i, %i, %i", currentEventList.events[currentEventList.count].frame, currentEventList.events[currentEventList.count].params[0], currentEventList.events[currentEventList.count].params[1], currentEventList.events[currentEventList.count].params[2]);
+                currentEventList.count++;
             }
 
-            if (currentEventList->count == currentEventList->capacity) return;    // Security check
+            if (currentEventList.count == currentEventList.capacity) return;    // Security check
 
             // Event type: INPUT_GAMEPAD_BUTTON_DOWN
+#if AUTOMATION_EVENTS_V2
+            if (!CORE.Input.Gamepad.previousButtonState[gamepad][button] && CORE.Input.Gamepad.currentButtonState[gamepad][button])
+#else
             if (CORE.Input.Gamepad.currentButtonState[gamepad][button])
+#endif
             {
-                currentEventList->events[currentEventList->count].frame = CORE.Time.frameCounter;
-                currentEventList->events[currentEventList->count].type = INPUT_GAMEPAD_BUTTON_DOWN;
-                currentEventList->events[currentEventList->count].params[0] = gamepad;
-                currentEventList->events[currentEventList->count].params[1] = button;
-                currentEventList->events[currentEventList->count].params[2] = 0;
+                currentEventList.events[currentEventList.count].frame = automationEventFrame;
+                currentEventList.events[currentEventList.count].type = INPUT_GAMEPAD_BUTTON_DOWN;
+                currentEventList.events[currentEventList.count].params[0] = gamepad;
+                currentEventList.events[currentEventList.count].params[1] = button;
+                currentEventList.events[currentEventList.count].params[2] = 0;
 
-                TRACELOG(LOG_INFO, "AUTOMATION: Frame: %i | Event type: INPUT_GAMEPAD_BUTTON_DOWN | Event parameters: %i, %i, %i", currentEventList->events[currentEventList->count].frame, currentEventList->events[currentEventList->count].params[0], currentEventList->events[currentEventList->count].params[1], currentEventList->events[currentEventList->count].params[2]);
-                currentEventList->count++;
+                TRACELOG(LOG_INFO, "AUTOMATION: Frame: %i | Event type: INPUT_GAMEPAD_BUTTON_DOWN | Event parameters: %i, %i, %i", currentEventList.events[currentEventList.count].frame, currentEventList.events[currentEventList.count].params[0], currentEventList.events[currentEventList.count].params[1], currentEventList.events[currentEventList.count].params[2]);
+                currentEventList.count++;
             }
 
-            if (currentEventList->count == currentEventList->capacity) return;    // Security check
+            if (currentEventList.count == currentEventList.capacity) return;    // Security check
         }
 
         for (int axis = 0; axis < MAX_GAMEPAD_AXES; axis++)
@@ -4582,37 +4636,37 @@ static void RecordAutomationEvent(void)
             float defaultMovement = ((axis == GAMEPAD_AXIS_LEFT_TRIGGER) || (axis == GAMEPAD_AXIS_RIGHT_TRIGGER))? -1.0f : 0.0f;
             if (GetGamepadAxisMovement(gamepad, axis) != defaultMovement)
             {
-                currentEventList->events[currentEventList->count].frame = CORE.Time.frameCounter;
-                currentEventList->events[currentEventList->count].type = INPUT_GAMEPAD_AXIS_MOTION;
-                currentEventList->events[currentEventList->count].params[0] = gamepad;
-                currentEventList->events[currentEventList->count].params[1] = axis;
-                currentEventList->events[currentEventList->count].params[2] = (int)(CORE.Input.Gamepad.axisState[gamepad][axis]*32768.0f);
+                currentEventList.events[currentEventList.count].frame = automationEventFrame;
+                currentEventList.events[currentEventList.count].type = INPUT_GAMEPAD_AXIS_MOTION;
+                currentEventList.events[currentEventList.count].params[0] = gamepad;
+                currentEventList.events[currentEventList.count].params[1] = axis;
+                currentEventList.events[currentEventList.count].params[2] = (int)(CORE.Input.Gamepad.axisState[gamepad][axis]*32768.0f);
 
-                TRACELOG(LOG_INFO, "AUTOMATION: Frame: %i | Event type: INPUT_GAMEPAD_AXIS_MOTION | Event parameters: %i, %i, %i", currentEventList->events[currentEventList->count].frame, currentEventList->events[currentEventList->count].params[0], currentEventList->events[currentEventList->count].params[1], currentEventList->events[currentEventList->count].params[2]);
-                currentEventList->count++;
+                TRACELOG(LOG_INFO, "AUTOMATION: Frame: %i | Event type: INPUT_GAMEPAD_AXIS_MOTION | Event parameters: %i, %i, %i", currentEventList.events[currentEventList.count].frame, currentEventList.events[currentEventList.count].params[0], currentEventList.events[currentEventList.count].params[1], currentEventList.events[currentEventList.count].params[2]);
+                currentEventList.count++;
             }
 
-            if (currentEventList->count == currentEventList->capacity) return;    // Security check
+            if (currentEventList.count == currentEventList.capacity) return;    // Security check
         }
     }
     //-------------------------------------------------------------------------------------
 
 #if SUPPORT_GESTURES_SYSTEM
-    // Gestures input currentEventList->events recording
+    // Gestures input currentEventList.events recording
     //-------------------------------------------------------------------------------------
     if (GESTURES.current != GESTURE_NONE)
     {
         // Event type: INPUT_GESTURE
-        currentEventList->events[currentEventList->count].frame = CORE.Time.frameCounter;
-        currentEventList->events[currentEventList->count].type = INPUT_GESTURE;
-        currentEventList->events[currentEventList->count].params[0] = GESTURES.current;
-        currentEventList->events[currentEventList->count].params[1] = 0;
-        currentEventList->events[currentEventList->count].params[2] = 0;
+        currentEventList.events[currentEventList.count].frame = automationEventFrame;
+        currentEventList.events[currentEventList.count].type = INPUT_GESTURE;
+        currentEventList.events[currentEventList.count].params[0] = GESTURES.current;
+        currentEventList.events[currentEventList.count].params[1] = 0;
+        currentEventList.events[currentEventList.count].params[2] = 0;
 
-        TRACELOG(LOG_INFO, "AUTOMATION: Frame: %i | Event type: INPUT_GESTURE | Event parameters: %i, %i, %i", currentEventList->events[currentEventList->count].frame, currentEventList->events[currentEventList->count].params[0], currentEventList->events[currentEventList->count].params[1], currentEventList->events[currentEventList->count].params[2]);
-        currentEventList->count++;
+        TRACELOG(LOG_INFO, "AUTOMATION: Frame: %i | Event type: INPUT_GESTURE | Event parameters: %i, %i, %i", currentEventList.events[currentEventList.count].frame, currentEventList.events[currentEventList.count].params[0], currentEventList.events[currentEventList.count].params[1], currentEventList.events[currentEventList.count].params[2]);
+        currentEventList.count++;
 
-        if (currentEventList->count == currentEventList->capacity) return;    // Security check
+        if (currentEventList.count == currentEventList.capacity) return;    // Security check
     }
     //-------------------------------------------------------------------------------------
 #endif

@@ -106,6 +106,7 @@
 #ifndef SUPPORT_AUTOMATION_EVENTS
     // Support automatic generated events, loading and recording of those events when required
     #define SUPPORT_AUTOMATION_EVENTS       1
+    #define AUTOMATION_EVENTS_V2            1
 #endif
 #ifndef SUPPORT_CUSTOM_FRAME_CONTROL
     // Support custom frame control, only for advanced users
