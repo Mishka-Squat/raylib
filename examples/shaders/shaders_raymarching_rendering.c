@@ -110,7 +110,7 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadShader(&shader);           // Unload shader
+    UnloadShader(shader);           // Unload shader
 
     CloseWindow();                  // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

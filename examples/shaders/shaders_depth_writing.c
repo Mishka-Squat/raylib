@@ -103,7 +103,7 @@ int main(void)
     // De-Initialization
     //--------------------------------------------------------------------------------------
     UnloadRenderTextureDepthTex(&target);
-    UnloadShader(&shader);
+    UnloadShader(shader);
 
     CloseWindow();        // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

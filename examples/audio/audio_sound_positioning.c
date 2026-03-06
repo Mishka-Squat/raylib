@@ -90,7 +90,7 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadSound(&sound);
+    UnloadSound(sound);
     CloseAudioDevice();     // Close audio device
 
     CloseWindow();          // Close window and OpenGL context

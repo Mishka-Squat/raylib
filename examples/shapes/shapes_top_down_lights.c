@@ -92,7 +92,7 @@ int main(void)
     // Create a checkerboard ground texture
     Image img = GenImageChecked(64, 64, 32, 32, DARKBROWN, DARKGRAY);
     Texture2D backgroundTexture = LoadTextureFromImage(img);
-    UnloadImage(&img);
+    UnloadImage(img);
 
     // Create a global light mask to hold all the blended lights
     RenderTexture lightMask = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
@@ -206,11 +206,11 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadTexture(&backgroundTexture);
-    UnloadRenderTexture(&lightMask);
+    UnloadTexture(backgroundTexture);
+    UnloadRenderTexture(lightMask);
     for (int i = 0; i < MAX_LIGHTS; i++)
     {
-        if (lights[i].active) UnloadRenderTexture(&lights[i].mask);
+        if (lights[i].active) UnloadRenderTexture(lights[i].mask);
     }
 
     CloseWindow();        // Close window and OpenGL context

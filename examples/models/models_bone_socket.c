@@ -167,10 +167,10 @@ int main(void)
     // De-Initialization
     //--------------------------------------------------------------------------------------
     UnloadModelAnimations(modelAnimations, animsCount);
-    UnloadModel(&characterModel);        // Unload character model and meshes/material
+    UnloadModel(characterModel);        // Unload character model and meshes/material
     
     // Unload equipment model and meshes/material
-    for (int i = 0; i < BONE_SOCKETS; i++) UnloadModel(&equipModel[i]);
+    for (int i = 0; i < BONE_SOCKETS; i++) UnloadModel(equipModel[i]);
 
     CloseWindow();              // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

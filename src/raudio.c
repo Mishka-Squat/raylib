@@ -446,7 +446,7 @@ static bool SaveFileText(const char *fileName, char *text);         // Save text
 // NOTE: Those functions are not exposed by raylib... for the moment
 //----------------------------------------------------------------------------------
 AudioBuffer *LoadAudioBuffer(ma_format format, ma_uint32 channels, ma_uint32 sampleRate, ma_uint32 sizeInFrames, int usage);
-void UnloadAudioBuffer(AudioBuffer *buffer);
+AudioBuffer* UnloadAudioBuffer(AudioBuffer *buffer);
 
 bool IsAudioBufferPlaying(AudioBuffer *buffer);
 void PlayAudioBuffer(AudioBuffer *buffer);
@@ -637,7 +637,7 @@ AudioBuffer *LoadAudioBuffer(ma_format format, ma_uint32 channels, ma_uint32 sam
 }
 
 // Delete an audio buffer
-void UnloadAudioBuffer(AudioBuffer *buffer)
+AudioBuffer* UnloadAudioBuffer(AudioBuffer *buffer)
 {
     if (buffer != NULL)
     {
@@ -647,6 +647,8 @@ void UnloadAudioBuffer(AudioBuffer *buffer)
         RL_FREE(buffer->data);
         RL_FREE(buffer);
     }
+
+    return NULL;
 }
 
 // Check if an audio buffer is playing from a program state without lock
@@ -937,7 +939,7 @@ Sound LoadSound(const char *fileName)
 
     Sound sound = LoadSoundFromWave(wave);
 
-    UnloadWave(&wave); // Sound is loaded, wave can be unloaded
+    UnloadWave(wave); // Sound is loaded, wave can be unloaded
 
     return sound;
 }
@@ -1034,29 +1036,32 @@ bool IsSoundValid(Sound sound)
 }
 
 // Unload wave data
-void UnloadWave(Wave *wave)
+Wave UnloadWave(Wave wave)
 {
-    RL_FREE_NULL(wave->data);
+    RL_FREE_NULL(wave.data);
     //TRACELOG(LOG_INFO, "WAVE: Unloaded wave data from RAM");
+    return wave;
 }
 
 // Unload sound
-void UnloadSound(Sound *sound)
+Sound UnloadSound(Sound sound)
 {
-    UnloadAudioBuffer(sound->stream.buffer);
-    sound->stream.buffer = NULL;
+    sound.stream.buffer = UnloadAudioBuffer(sound.stream.buffer);
     //TRACELOG(LOG_INFO, "SOUND: Unloaded sound data from RAM");
+    return sound;
 }
 
-void UnloadSoundAlias(Sound *alias)
+Sound UnloadSoundAlias(Sound alias)
 {
     // Untrack and unload the sound buffer, not the sample data, it is shared with the source for the alias
-    if (alias->stream.buffer != NULL)
+    if (alias.stream.buffer != NULL)
     {
-        UntrackAudioBuffer(alias->stream.buffer);
-        ma_data_converter_uninit(&alias->stream.buffer->converter, NULL);
-        RL_FREE_NULL(alias->stream.buffer);
+        UntrackAudioBuffer(alias.stream.buffer);
+        ma_data_converter_uninit(&alias.stream.buffer->converter, NULL);
+        RL_FREE_NULL(alias.stream.buffer);
     }
+
+    return alias;
 }
 
 // Update sound buffer with new data
@@ -1769,36 +1774,38 @@ bool IsMusicValid(Music music)
 }
 
 // Unload music stream
-void UnloadMusicStream(Music *music)
+Music UnloadMusicStream(Music music)
 {
-    UnloadAudioStream(&music->stream);
+    music.stream = UnloadAudioStream(music.stream);
 
-    if (music->ctxData != NULL)
+    if (music.ctxData != NULL)
     {
         if (false) { }
 #if SUPPORT_FILEFORMAT_WAV
-        else if (music->ctxType == MUSIC_AUDIO_WAV) drwav_uninit((drwav *)music->ctxData);
+        else if (music.ctxType == MUSIC_AUDIO_WAV) drwav_uninit((drwav *)music.ctxData);
 #endif
 #if SUPPORT_FILEFORMAT_OGG
-        else if (music->ctxType == MUSIC_AUDIO_OGG) stb_vorbis_close((stb_vorbis *)music->ctxData);
+        else if (music.ctxType == MUSIC_AUDIO_OGG) stb_vorbis_close((stb_vorbis *)music.ctxData);
 #endif
 #if SUPPORT_FILEFORMAT_MP3
-        else if (music->ctxType == MUSIC_AUDIO_MP3) { drmp3_uninit((drmp3 *)music->ctxData); RL_FREE(music->ctxData); }
+        else if (music.ctxType == MUSIC_AUDIO_MP3) { drmp3_uninit((drmp3 *)music.ctxData); RL_FREE_NULL(music.ctxData); }
 #endif
 #if SUPPORT_FILEFORMAT_QOA
-        else if (music->ctxType == MUSIC_AUDIO_QOA) qoaplay_close((qoaplay_desc *)music->ctxData);
+        else if (music.ctxType == MUSIC_AUDIO_QOA) qoaplay_close((qoaplay_desc *)music.ctxData);
 #endif
 #if SUPPORT_FILEFORMAT_FLAC
-        else if (music->ctxType == MUSIC_AUDIO_FLAC) { drflac_close((drflac *)music->ctxData); drflac_free((drflac *)music->ctxData, NULL); }
+        else if (music.ctxType == MUSIC_AUDIO_FLAC) { drflac_close((drflac *)music.ctxData); drflac_free((drflac *)music.ctxData, NULL); }
 #endif
 #if SUPPORT_FILEFORMAT_XM
-        else if (music->ctxType == MUSIC_MODULE_XM) jar_xm_free_context((jar_xm_context_t *)music->ctxData);
+        else if (music.ctxType == MUSIC_MODULE_XM) jar_xm_free_context((jar_xm_context_t *)music.ctxData);
 #endif
 #if SUPPORT_FILEFORMAT_MOD
-        else if (music->ctxType == MUSIC_MODULE_MOD) { jar_mod_unload((jar_mod_context_t *)music->ctxData); RL_FREE(music->ctxData); }
+        else if (music.ctxType == MUSIC_MODULE_MOD) { jar_mod_unload((jar_mod_context_t *)music.ctxData); RL_FREE_NULL(music.ctxData); }
 #endif
-        music->ctxData = NULL;
+        music.ctxData = NULL;
     }
+
+    return music;
 }
 
 // Start music playing (open stream) from beginning
@@ -2172,12 +2179,12 @@ bool IsAudioStreamValid(AudioStream stream)
 }
 
 // Unload audio stream and free memory
-void UnloadAudioStream(AudioStream *stream)
+AudioStream UnloadAudioStream(AudioStream stream)
 {
-    UnloadAudioBuffer(stream->buffer);
-    stream->buffer = NULL;
+    stream.buffer = UnloadAudioBuffer(stream.buffer);
 
     TRACELOG(LOG_INFO, "STREAM: Unloaded audio stream data from RAM");
+    return stream;
 }
 
 // Update audio stream buffers with data

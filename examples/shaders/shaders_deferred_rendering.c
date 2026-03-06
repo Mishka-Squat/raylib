@@ -322,12 +322,12 @@ int main(void)
     // De-Initialization
     //--------------------------------------------------------------------------------------
     // Unload the models
-    UnloadModel(&model);
-    UnloadModel(&cube);
+    UnloadModel(model);
+    UnloadModel(cube);
 
     // Unload shaders
-    UnloadShader(&deferredShader);
-    UnloadShader(&gbufferShader);
+    UnloadShader(deferredShader);
+    UnloadShader(gbufferShader);
 
     // Unload geometry buffer and all attached textures
     rlUnloadFramebuffer(gBuffer.framebufferId);

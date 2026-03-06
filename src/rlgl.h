@@ -141,7 +141,7 @@
     #define RL_REALLOC(n,sz)  realloc(n,sz)
 #endif
 #ifndef RL_FREE
-    #define RL_FREE(p)        free(p);
+    #define RL_FREE(p)        free(p)
 #endif
 
 // Security check in case no GRAPHICS_API_OPENGL_* defined
@@ -4217,7 +4217,9 @@ void rlSetVertexAttribute(unsigned int index, int compSize, int type, bool norma
     // Additional types (depends on OpenGL version or extensions):
     //  - GL_HALF_FLOAT, GL_FLOAT, GL_DOUBLE, GL_FIXED,
     //  - GL_INT_2_10_10_10_REV, GL_UNSIGNED_INT_2_10_10_10_REV, GL_UNSIGNED_INT_10F_11F_11F_REV
-    glVertexAttribPointer(index, compSize, type, normalized, stride, (void *)(intptr_t)offset);
+
+    size_t offsetNative = offset;
+    glVertexAttribPointer(index, compSize, type, normalized, stride, (void *)offsetNative);
 #endif
 }
 

@@ -131,7 +131,7 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadMusicStream(&music);   // Unload music stream buffers from RAM
+    UnloadMusicStream(music);   // Unload music stream buffers from RAM
 
     CloseAudioDevice();         // Close audio device (music streaming is automatically stopped)
 

@@ -156,7 +156,7 @@ int main(void)
             Image image = LoadImageFromTexture(target.texture);
             ImageFlipVertical(&image);
             ExportImage(image, "my_amazing_texture_painting.png");
-            UnloadImage(&image);
+            UnloadImage(image);
             showSaveMessage = true;
         }
 
@@ -219,7 +219,7 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadRenderTexture(&target);    // Unload render texture
+    UnloadRenderTexture(target);    // Unload render texture
 
     CloseWindow();                  // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

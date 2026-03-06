@@ -36,7 +36,7 @@ int main(void)
     ImageDrawTextEx(&parrots, font, "[Parrots font drawing]", (Vector2){ 20.0f, 20.0f }, (float)font.baseSize, 0.0f, RED);
 
     Texture2D texture = LoadTextureFromImage(parrots);  // Image converted to texture, uploaded to GPU memory (VRAM)
-    UnloadImage(&parrots);   // Once image has been converted to texture and uploaded to VRAM, it can be unloaded from RAM
+    UnloadImage(parrots);   // Once image has been converted to texture and uploaded to VRAM, it can be unloaded from RAM
 
     Vector2 position = { (float)screenWidth/2 - (float)texture.width/2, (float)screenHeight/2 - (float)texture.height/2 - 20 };
 
@@ -79,9 +79,9 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadTexture(&texture);     // Texture unloading
+    UnloadTexture(texture);     // Texture unloading
 
-    UnloadFont(&font);           // Unload custom font
+    UnloadFont(font);           // Unload custom font
 
     CloseWindow();              // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

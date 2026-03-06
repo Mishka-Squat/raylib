@@ -59,8 +59,8 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadSound(&fxWav);     // Unload sound data
-    UnloadSound(&fxOgg);     // Unload sound data
+    UnloadSound(fxWav);     // Unload sound data
+    UnloadSound(fxOgg);     // Unload sound data
 
     CloseAudioDevice();     // Close audio device
 

@@ -101,7 +101,7 @@ int main(void)
     Image decalImage = LoadImage("resources/raylib_logo.png");
     ImageResizeNN(&decalImage, decalImage.width/4, decalImage.height/4);
     Texture decalTexture = LoadTextureFromImage(decalImage);
-    UnloadImage(&decalImage);
+    UnloadImage(decalImage);
 
     SetTextureFilter(decalTexture, TEXTURE_FILTER_BILINEAR);
     decalMaterial.maps[MATERIAL_MAP_DIFFUSE].texture = decalTexture;
@@ -254,7 +254,7 @@ int main(void)
             if (GuiButton((Rectangle){ 10 + 110, screenHeight - 100.0f, 100, 60 }, "Clear Decals"))
             {
                 // Clear decals, unload all decal models
-                for (int i = 0; i < decalCount; i++) UnloadModel(&decalModels[i]);
+                for (int i = 0; i < decalCount; i++) UnloadModel(decalModels[i]);
                 decalCount = 0;
             }
 
@@ -266,13 +266,13 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadModel(&model);
-    UnloadTexture(&modelTexture);
+    UnloadModel(model);
+    UnloadTexture(modelTexture);
 
     // Unload decal models
-    for (int i = 0; i < decalCount; i++) UnloadModel(&decalModels[i]);
+    for (int i = 0; i < decalCount; i++) UnloadModel(decalModels[i]);
 
-    UnloadTexture(&decalTexture);
+    UnloadTexture(decalTexture);
 
     FreeDecalMeshData();        // Free the data for decal generation
 

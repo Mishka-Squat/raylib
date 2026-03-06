@@ -262,7 +262,7 @@ extern void LoadFontDefault(void)
     // to avoid reallocating the glyphs and rects
     if (defaultFont.glyphs != NULL)
     {
-        UnloadImage(&imFont);
+        UnloadImage(imFont);
         return;
     }
 
@@ -308,7 +308,7 @@ extern void LoadFontDefault(void)
         defaultFont.glyphs[i].image = ImageFromImage(imFont, defaultFont.recs[i]);
     }
 
-    UnloadImage(&imFont);
+    UnloadImage(imFont);
 
     defaultFont.baseSize = (int)defaultFont.recs[0].height;
 
@@ -318,8 +318,8 @@ extern void LoadFontDefault(void)
 // Unload raylib default font
 extern void UnloadFontDefault(void)
 {
-    for (int i = 0; i < defaultFont.glyphCount; i++) UnloadImage(&defaultFont.glyphs[i].image);
-    UnloadTexture(&defaultFont.texture);
+    for (int i = 0; i < defaultFont.glyphCount; i++) UnloadImage(defaultFont.glyphs[i].image);
+    UnloadTexture(defaultFont.texture);
     RL_FREE(defaultFont.glyphs);
     RL_FREE(defaultFont.recs);
     defaultFont.glyphCount = 0;
@@ -368,7 +368,7 @@ Font LoadFont(const char *fileName)
         Image image = LoadImage(fileName);
         if (image.data != NULL) font = LoadFontFromImage(image, MAGENTA, FONT_TTF_DEFAULT_FIRST_CHAR);
         else font = GetFontDefault();
-        UnloadImage(&image);
+        UnloadImage(image);
     }
 
     if (font.texture.id == 0) TRACELOG(LOG_WARNING, "FONT: [%s] Failed to load font texture -> Using default font", fileName);
@@ -521,7 +521,7 @@ Font LoadFontFromImage(Image image, Color key, int firstChar)
         font.glyphs[i].image = ImageFromImage(fontClear, tempCharRecs[i]);
     }
 
-    UnloadImage(&fontClear);     // Unload processed image once converted to texture
+    UnloadImage(fontClear);     // Unload processed image once converted to texture
 
     font.baseSize = (int)font.recs[0].height;
 
@@ -570,11 +570,11 @@ Font LoadFontFromMemory(const char *fileType, const unsigned char *fileData, int
         // Update glyphs[i].image to use alpha, required to be used on ImageDrawText()
         for (int i = 0; i < font.glyphCount; i++)
         {
-            UnloadImage(&font.glyphs[i].image);
+            UnloadImage(font.glyphs[i].image);
             font.glyphs[i].image = ImageFromImage(atlas, font.recs[i]);
         }
 
-        UnloadImage(&atlas);
+        UnloadImage(atlas);
 
         TRACELOG(LOG_INFO, "FONT: Data loaded successfully (%i pixel size | %i glyphs)", font.baseSize, font.glyphCount);
     }
@@ -988,28 +988,32 @@ Image GenImageFontAtlas(const GlyphInfo *glyphs, Rectangle **glyphRecs, int glyp
 #endif
 
 // Unload font glyphs info data (RAM)
-void UnloadFontData(GlyphInfo *glyphs, int glyphCount)
+GlyphInfo* UnloadFontData(GlyphInfo *glyphs, int glyphCount)
 {
     if (glyphs != NULL)
     {
-        for (int i = 0; i < glyphCount; i++) UnloadImage(&glyphs[i].image);
+        for (int i = 0; i < glyphCount; i++) UnloadImage(glyphs[i].image);
 
         RL_FREE(glyphs);
     }
+	
+	return glyphs;
 }
 
 // Unload Font from GPU memory (VRAM)
-void UnloadFont(Font *font)
+Font UnloadFont(Font font)
 {
     // NOTE: Make sure font is not default font (fallback)
-    if (font->texture.id != GetFontDefault().texture.id)
+    if (font.texture.id != GetFontDefault().texture.id)
     {
-        UnloadFontData(font->glyphs, font->glyphCount);
-        UnloadTexture(&font->texture);
-        RL_FREE(font->recs);
+        font.glyphs = UnloadFontData(font.glyphs, font.glyphCount);
+        font.texture = UnloadTexture(font.texture);
+        RL_FREE_NULL(font.recs);
 
         TRACELOG(LOG_DEBUG, "FONT: Unloaded font data from RAM and VRAM");
     }
+	
+    return font;
 }
 
 // Export font as code file, returns true on success
@@ -1154,7 +1158,7 @@ bool ExportFontAsCode(Font font, const char *fileName)
     byteCount += sprintf(txtData + byteCount, "    return font;\n");
     byteCount += sprintf(txtData + byteCount, "}\n");
 
-    UnloadImage(&image);
+    UnloadImage(image);
 
     // NOTE: Text data size exported is determined by '\0' (NULL) character
     success = SaveFileText(fileName, txtData);
@@ -2580,13 +2584,13 @@ static Font LoadBMFont(const char *fileName)
                 ((unsigned char *)(imFontAlpha.data))[p + 1] = ((unsigned char *)imFonts[i].data)[pi];
             }
 
-            UnloadImage(&imFonts[i]);
+            UnloadImage(imFonts[i]);
             imFonts[i] = imFontAlpha;
         }
     }
 
     Image fullFont = imFonts[0];
-    for (int i = 1; i < pageCount; i++) UnloadImage(&imFonts[i]);
+    for (int i = 1; i < pageCount; i++) UnloadImage(imFonts[i]);
 
     // If multiple atlas, then merge atlas
     // NOTE: WARNING: This process could be really slow!
@@ -2652,12 +2656,12 @@ static Font LoadBMFont(const char *fileName)
         }
     }
 
-    UnloadImage(&fullFont);
+    UnloadImage(fullFont);
     UnloadFileText(fileText);
 
     if (font.texture.id == 0)
     {
-        UnloadFont(&font);
+        UnloadFont(font);
         font = GetFontDefault();
         TRACELOG(LOG_WARNING, "FONT: [%s] Failed to load texture, reverted to default font", fileName);
     }

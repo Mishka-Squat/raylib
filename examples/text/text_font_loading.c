@@ -90,8 +90,8 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadFont(&fontBm);     // AngelCode Font unloading
-    UnloadFont(&fontTtf);    // TTF Font unloading
+    UnloadFont(fontBm);     // AngelCode Font unloading
+    UnloadFont(fontTtf);    // TTF Font unloading
 
     CloseWindow();          // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

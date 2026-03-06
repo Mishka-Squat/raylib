@@ -39,8 +39,8 @@ int main(void)
     Texture2D fgTexture = LoadTextureFromImage(fgImage);          // Image converted to texture, GPU memory (VRAM)
 
     // Once image has been converted to texture and uploaded to VRAM, it can be unloaded from RAM
-    UnloadImage(&bgImage);
-    UnloadImage(&fgImage);
+    UnloadImage(bgImage);
+    UnloadImage(fgImage);
 
     const int blendCountMax = 4;
     BlendMode blendMode = 0;
@@ -93,8 +93,8 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadTexture(&fgTexture); // Unload foreground texture
-    UnloadTexture(&bgTexture); // Unload background texture
+    UnloadTexture(fgTexture); // Unload foreground texture
+    UnloadTexture(bgTexture); // Unload background texture
 
     CloseWindow();            // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

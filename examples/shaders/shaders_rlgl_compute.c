@@ -90,7 +90,7 @@ int main(void)
     // each pixel of the window using the fragment shader: golRenderShader
     Image whiteImage = GenImageColor(GOL_WIDTH, GOL_WIDTH, WHITE);
     Texture whiteTex = LoadTextureFromImage(whiteImage);
-    UnloadImage(&whiteImage);
+    whiteImage = UnloadImage(whiteImage);
     //--------------------------------------------------------------------------------------
 
     // Main game loop
@@ -173,8 +173,8 @@ int main(void)
     rlUnloadShaderProgram(golTransfertProgram);
     rlUnloadShaderProgram(golLogicProgram);
 
-    UnloadTexture(&whiteTex);            // Unload white texture
-    UnloadShader(&golRenderShader);      // Unload rendering fragment shader
+    UnloadTexture(whiteTex);            // Unload white texture
+    UnloadShader(golRenderShader);      // Unload rendering fragment shader
 
     CloseWindow();                      // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

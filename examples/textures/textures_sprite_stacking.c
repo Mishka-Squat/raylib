@@ -96,7 +96,7 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadTexture(&booth);
+    UnloadTexture(booth);
 
     CloseWindow();        // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

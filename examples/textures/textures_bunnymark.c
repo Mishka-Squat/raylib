@@ -121,7 +121,7 @@ int main(void)
     //--------------------------------------------------------------------------------------
     free(bunnies);              // Unload bunnies data array
 
-    UnloadTexture(&texBunny);    // Unload bunny texture
+    UnloadTexture(texBunny);    // Unload bunny texture
 
     CloseWindow();              // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

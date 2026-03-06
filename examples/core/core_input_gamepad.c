@@ -281,8 +281,8 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadTexture(&texPs3Pad);
-    UnloadTexture(&texXboxPad);
+    UnloadTexture(texPs3Pad);
+    UnloadTexture(texXboxPad);
 
     CloseWindow();        // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

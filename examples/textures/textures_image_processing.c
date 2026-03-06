@@ -116,7 +116,7 @@ int main(void)
         // Reload texture when required
         if (textureReload)
         {
-            UnloadImage(&imCopy);                // Unload image-copy data
+            UnloadImage(imCopy);                // Unload image-copy data
             imCopy = ImageCopy(imOrigin);     // Restore image-copy from image-origin
 
             // NOTE: Image processing is a costly CPU process to be done every frame,
@@ -168,9 +168,9 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadTexture(&texture);       // Unload texture from VRAM
-    UnloadImage(&imOrigin);        // Unload image-origin from RAM
-    UnloadImage(&imCopy);          // Unload image-copy from RAM
+    UnloadTexture(texture);       // Unload texture from VRAM
+    UnloadImage(imOrigin);        // Unload image-origin from RAM
+    UnloadImage(imCopy);          // Unload image-copy from RAM
 
     CloseWindow();                // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

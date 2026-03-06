@@ -188,11 +188,11 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadShader(&shadowShader);
-    UnloadModel(&cube);
-    UnloadModel(&robot);
-    UnloadModelAnimations(&anims, animCount);
-    UnloadShadowmapRenderTexture(&shadowMap);
+    UnloadShader(shadowShader);
+    UnloadModel(cube);
+    UnloadModel(robot);
+    UnloadModelAnimations(anims, animCount);
+    UnloadShadowmapRenderTexture(shadowMap);
 
     CloseWindow();        // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

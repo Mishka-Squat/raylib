@@ -88,7 +88,7 @@ int main(void)
         // despite texture can be successfully created.. so using PIXELFORMAT_UNCOMPRESSED_R8G8B8A8 instead of PIXELFORMAT_UNCOMPRESSED_R32G32B32A32
         skybox.materials[0].maps[MATERIAL_MAP_CUBEMAP].texture = GenTextureCubemap(shdrCubemap, panorama, 1024, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8);
 
-        UnloadTexture(&panorama);        // Texture not required anymore, cubemap already generated
+        UnloadTexture(panorama);        // Texture not required anymore, cubemap already generated
     }
     else
     {
@@ -96,7 +96,7 @@ int main(void)
         // and generate the required cubemap image to be passed to rlLoadTextureCubemap()
         Image image = LoadImage("resources/skybox.png");
         skybox.materials[0].maps[MATERIAL_MAP_CUBEMAP].texture = LoadTextureCubemap(image, CUBEMAP_LAYOUT_AUTO_DETECT);
-        UnloadImage(&image);
+        UnloadImage(image);
     }
 
     DisableCursor();                    // Limit cursor to relative movement inside the window
@@ -121,7 +121,7 @@ int main(void)
                 if (IsFileExtension(droppedFiles.paths[0], ".png;.jpg;.hdr;.bmp;.tga"))
                 {
                     // Unload current cubemap texture to load new one
-                    UnloadTexture(&skybox.materials[0].maps[MATERIAL_MAP_CUBEMAP].texture);
+                    UnloadTexture(skybox.materials[0].maps[MATERIAL_MAP_CUBEMAP].texture);
                     
                     if (useHDR)
                     {
@@ -131,13 +131,13 @@ int main(void)
                         // Generate cubemap from panorama texture
                         skybox.materials[0].maps[MATERIAL_MAP_CUBEMAP].texture = GenTextureCubemap(shdrCubemap, panorama, 1024, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8);
                         
-                        UnloadTexture(&panorama);    // Texture not required anymore, cubemap already generated
+                        UnloadTexture(panorama);    // Texture not required anymore, cubemap already generated
                     }
                     else
                     {
                         Image image = LoadImage(droppedFiles.paths[0]);
                         skybox.materials[0].maps[MATERIAL_MAP_CUBEMAP].texture = LoadTextureCubemap(image, CUBEMAP_LAYOUT_AUTO_DETECT);
-                        UnloadImage(&image);
+                        UnloadImage(image);
                     }
 
                     TextCopy(skyboxFileName, droppedFiles.paths[0]);
@@ -178,10 +178,10 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadShader(&skybox.materials[0].shader);
-    UnloadTexture(&skybox.materials[0].maps[MATERIAL_MAP_CUBEMAP].texture);
+    UnloadShader(skybox.materials[0].shader);
+    UnloadTexture(skybox.materials[0].maps[MATERIAL_MAP_CUBEMAP].texture);
 
-    UnloadModel(&skybox);        // Unload skybox model
+    UnloadModel(skybox);        // Unload skybox model
 
     CloseWindow();              // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

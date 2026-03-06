@@ -56,7 +56,7 @@ int main(void)
     // Load perlin noise texture
     Image perlinNoiseImage = GenImagePerlinNoise(512, 512, 0, 0, 1.0f);
     Texture perlinNoiseMap = LoadTextureFromImage(perlinNoiseImage);
-    UnloadImage(&perlinNoiseImage);
+    UnloadImage(perlinNoiseImage);
 
     // Set shader uniform location
     int perlinNoiseMapLoc = GetShaderLocation(shader, "perlinNoiseMap");
@@ -110,9 +110,9 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadShader(&shader);
-    UnloadModel(&planeModel);
-    UnloadTexture(&perlinNoiseMap);
+    UnloadShader(shader);
+    UnloadModel(planeModel);
+    UnloadTexture(perlinNoiseMap);
 
     CloseWindow();        // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

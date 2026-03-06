@@ -92,8 +92,8 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadTexture(&button);  // Unload button texture
-    UnloadSound(&fxButton);  // Unload sound
+    UnloadTexture(button);  // Unload button texture
+    UnloadSound(fxButton);  // Unload sound
 
     CloseAudioDevice();     // Close audio device
 

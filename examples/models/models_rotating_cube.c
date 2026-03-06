@@ -42,8 +42,8 @@ int main(void)
     Image img = LoadImage("resources/cubicmap_atlas.png");
     Image crop = ImageFromImage(img, (Rectangle){0, img.height/2.0f, img.width/2.0f, img.height/2.0f});
     Texture2D texture = LoadTextureFromImage(crop);
-    UnloadImage(&img);
-    UnloadImage(&crop);
+    UnloadImage(img);
+    UnloadImage(crop);
 
     model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = texture;
 
@@ -84,8 +84,8 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadTexture(&texture); // Unload texture
-    UnloadModel(&model);     // Unload model
+    UnloadTexture(texture); // Unload texture
+    UnloadModel(model);     // Unload model
 
     CloseWindow();           // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

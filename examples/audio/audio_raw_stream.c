@@ -204,7 +204,7 @@ int main(void)
     free(data);                 // Unload sine wave data
     free(writeBuf);             // Unload write buffer
 
-    UnloadAudioStream(&stream);   // Close raw audio stream and delete buffers from RAM
+    UnloadAudioStream(stream);   // Close raw audio stream and delete buffers from RAM
     CloseAudioDevice();         // Close audio device (music streaming is automatically stopped)
 
     CloseWindow();              // Close window and OpenGL context

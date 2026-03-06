@@ -103,7 +103,7 @@ int main(void)
     //--------------------------------------------------------------------------------------
 
     // Fonts unloading
-    for (int i = 0; i < MAX_FONTS; i++) UnloadFont(&fonts[i]);
+    for (int i = 0; i < MAX_FONTS; i++) UnloadFont(fonts[i]);
 
     CloseWindow();                 // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

@@ -169,11 +169,11 @@ int main(void)
     // De-Initialization
     //--------------------------------------------------------------------------------------
     // Unload all postpro shaders
-    for (int i = 0; i < MAX_POSTPRO_SHADERS; i++) UnloadShader(&shaders[i]);
+    for (int i = 0; i < MAX_POSTPRO_SHADERS; i++) UnloadShader(shaders[i]);
 
-    UnloadTexture(&texture);         // Unload texture
-    UnloadModel(&model);             // Unload model
-    UnloadRenderTexture(&target);    // Unload render texture
+    UnloadTexture(texture);         // Unload texture
+    UnloadModel(model);             // Unload model
+    UnloadRenderTexture(target);    // Unload render texture
 
     CloseWindow();                  // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

@@ -147,8 +147,8 @@ int main(void)
     // De-Initialization
     //--------------------------------------------------------------------------------------
     UnloadRenderTextureDepthTex(target);
-    UnloadShader(&shdrRaymarch);
-    UnloadShader(&shdrRaster);
+    UnloadShader(shdrRaymarch);
+    UnloadShader(shdrRaster);
 
     CloseWindow();        // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

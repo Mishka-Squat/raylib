@@ -138,8 +138,8 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    for (int i = 0; i < MAX_TEXTURES; i++) UnloadTexture(&texture[i]);
-    UnloadShader(&shdrColorCorrection);
+    for (int i = 0; i < MAX_TEXTURES; i++) UnloadTexture(texture[i]);
+    UnloadShader(shdrColorCorrection);
 
     CloseWindow();        // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

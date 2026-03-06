@@ -54,15 +54,15 @@ int main(void)
     textures[8] = LoadTextureFromImage(cellular);
 
     // Unload image data (CPU RAM)
-    UnloadImage(&verticalGradient);
-    UnloadImage(&horizontalGradient);
-    UnloadImage(&diagonalGradient);
-    UnloadImage(&radialGradient);
-    UnloadImage(&squareGradient);
-    UnloadImage(&checked);
-    UnloadImage(&whiteNoise);
-    UnloadImage(&perlinNoise);
-    UnloadImage(&cellular);
+    UnloadImage(verticalGradient);
+    UnloadImage(horizontalGradient);
+    UnloadImage(diagonalGradient);
+    UnloadImage(radialGradient);
+    UnloadImage(squareGradient);
+    UnloadImage(checked);
+    UnloadImage(whiteNoise);
+    UnloadImage(perlinNoise);
+    UnloadImage(cellular);
 
     int currentTexture = 0;
 
@@ -114,7 +114,7 @@ int main(void)
     //--------------------------------------------------------------------------------------
 
     // Unload textures data (GPU VRAM)
-    for (int i = 0; i < NUM_TEXTURES; i++) UnloadTexture(&textures[i]);
+    for (int i = 0; i < NUM_TEXTURES; i++) UnloadTexture(textures[i]);
 
     CloseWindow();                // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

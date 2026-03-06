@@ -491,7 +491,7 @@ Image LoadImageFromMemory(const char *fileType, const unsigned char *fileData, i
             else
             {
                 TRACELOG(LOG_WARNING, "IMAGE: HDR file format not supported");
-                UnloadImage(&image);
+                UnloadImage(image);
             }
         }
 #endif
@@ -643,9 +643,11 @@ bool IsImageValid(Image image)
 }
 
 // Unload image from CPU memory (RAM)
-void UnloadImage(Image *image)
+Image UnloadImage(Image image)
 {
-    RL_FREE_NULL(image->data);
+    RL_FREE_NULL(image.data);
+	
+    return image;
 }
 
 // Export image data to file
@@ -2075,7 +2077,7 @@ void ImageAlphaMask(Image *image, Image alphaMask)
             }
         }
 
-        UnloadImage(&mask);
+        UnloadImage(mask);
     }
 }
 
@@ -2454,7 +2456,7 @@ void ImageMipmaps(Image *image)
             memcpy(nextmip, imCopy.data, mipSize);
         }
 
-        UnloadImage(&imCopy);
+        UnloadImage(imCopy);
 
         image->mipmaps = mipCount;
     }
@@ -4079,7 +4081,8 @@ void ImageDraw(Image *dst, Image src, Rectangle srcRec, Rectangle dstRec, Color 
             pDstBase += strideDst;
         }
 
-        if (useSrcMod) UnloadImage(&srcMod);     // Unload source modified image
+        if (useSrcMod)
+            srcMod = UnloadImage(srcMod);     // Unload source modified image
 
         if ((dst->mipmaps > 1) && (src.mipmaps > 1))
         {
@@ -4136,7 +4139,7 @@ void ImageDrawTextEx(Image *dst, Font font, const char *text, Vector2 position, 
 
     ImageDraw(dst, imText, srcRec, dstRec, WHITE);
 
-    UnloadImage(&imText);
+    UnloadImage(imText);
 }
 
 //------------------------------------------------------------------------------------
@@ -4152,7 +4155,7 @@ Texture2D LoadTexture(const char *fileName)
     if (image.data != NULL)
     {
         texture = LoadTextureFromImage(image);
-        UnloadImage(&image);
+        UnloadImage(image);
     }
 
     return texture;
@@ -4262,7 +4265,7 @@ TextureCubemap LoadTextureCubemap(Image image, int layout)
 
             for (int i = 0; i < 6; i++) ImageDraw(&faces, mipmapped, faceRecs[i], (Rectangle){ 0, (float)size*i, (float)size, (float)size }, WHITE);
 
-            UnloadImage(&mipmapped);
+            UnloadImage(mipmapped);
         }
 
         // NOTE: Cubemap data is expected to be provided as 6 images in a single data array,
@@ -4276,7 +4279,7 @@ TextureCubemap LoadTextureCubemap(Image image, int layout)
         }
         else TRACELOG(LOG_WARNING, "IMAGE: Failed to load cubemap image");
 
-        UnloadImage(&faces);
+        UnloadImage(faces);
     }
     else TRACELOG(LOG_WARNING, "IMAGE: Failed to detect cubemap image layout");
 
@@ -4338,15 +4341,17 @@ bool IsTextureValid(Texture2D texture)
 }
 
 // Unload texture from GPU memory (VRAM)
-void UnloadTexture(Texture2D *texture)
+Texture2D UnloadTexture(Texture2D texture)
 {
-    if (texture->id > 0)
+    if (texture.id > 0)
     {
-        rlUnloadTexture(texture->id);
+        rlUnloadTexture(texture.id);
 
-        TRACELOG(LOG_INFO, "TEXTURE: [ID %i] Unloaded texture data from VRAM (GPU)", texture->id);
-        texture->id = 0;
+        TRACELOG(LOG_INFO, "TEXTURE: [ID %i] Unloaded texture data from VRAM (GPU)", texture.id);
+        texture.id = 0;
     }
+
+    return texture;
 }
 
 // Check if a render texture is valid (loaded in GPU)
@@ -4363,22 +4368,24 @@ bool IsRenderTextureValid(RenderTexture2D target)
 }
 
 // Unload render texture from GPU memory (VRAM)
-void UnloadRenderTexture(RenderTexture2D *target)
+RenderTexture2D UnloadRenderTexture(RenderTexture2D target)
 {
-    if (target->id > 0)
+    if (target.id > 0)
     {
-        if (target->texture.id > 0)
+        if (target.texture.id > 0)
         {
             // Color texture attached to FBO is deleted
-            rlUnloadTexture(target->texture.id);
-            target->texture.id = 0;
+            rlUnloadTexture(target.texture.id);
+            target.texture.id = 0;
         }
 
         // NOTE: Depth texture/renderbuffer is automatically
         // queried and deleted before deleting framebuffer
-        rlUnloadFramebuffer(target->id);
-        target->id = 0;
+        rlUnloadFramebuffer(target.id);
+        target.id = 0;
     }
+
+    return target;
 }
 
 // Update GPU texture with new data

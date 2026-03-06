@@ -4423,7 +4423,7 @@ void GuiLoadStyle(const char *fileName)
                         if (fontFileName[0] != '\0')
                         {
                             // In case a font is already loaded and it is not default internal font, unload it
-                            if (font.texture.id != GetFontDefault().texture.id) UnloadTexture(&font.texture);
+                            if (font.texture.id != GetFontDefault().texture.id) UnloadTexture(font.texture);
 
                             if (codepointCount > 0) font = LoadFontEx(TextFormat("%s/%s", GetDirectoryPath(fileName), fontFileName), fontSize, codepoints, codepointCount);
                             else font = LoadFontEx(TextFormat("%s/%s", GetDirectoryPath(fileName), fontFileName), fontSize, NULL, 0);   // Default to 95 standard codepoints
@@ -4567,7 +4567,7 @@ void GuiLoadStyleDefault(void)
     if (guiFont.texture.id != GetFontDefault().texture.id)
     {
         // Unload previous font texture
-        UnloadTexture(&guiFont.texture);
+        UnloadTexture(guiFont.texture);
         RAYGUI_FREE(guiFont.recs);
         RAYGUI_FREE(guiFont.glyphs);
         guiFont.recs = NULL;
@@ -4943,7 +4943,7 @@ static void GuiLoadStyleFromMemory(const unsigned char *fileData, int dataSize)
                 fileDataPtr += fontImageUncompSize;
             }
 
-            if (font.texture.id != GetFontDefault().texture.id) UnloadTexture(&font.texture);
+            if (font.texture.id != GetFontDefault().texture.id) UnloadTexture(font.texture);
             font.texture = LoadTextureFromImage(imFont);
 
             RAYGUI_FREE(imFont.data);

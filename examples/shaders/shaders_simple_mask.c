@@ -136,14 +136,14 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadModel(&model1);
-    UnloadModel(&model2);
-    UnloadModel(&model3);
+    UnloadModel(model1);
+    UnloadModel(model2);
+    UnloadModel(model3);
 
-    UnloadTexture(&texDiffuse);  // Unload default diffuse texture
-    UnloadTexture(&texMask);     // Unload texture mask
+    UnloadTexture(texDiffuse);  // Unload default diffuse texture
+    UnloadTexture(texMask);     // Unload texture mask
 
-    UnloadShader(&shader);       // Unload shader
+    UnloadShader(shader);       // Unload shader
 
     CloseWindow();              // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

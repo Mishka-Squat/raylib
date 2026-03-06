@@ -890,7 +890,7 @@ void EndDrawing(void)
     if (automationEventRecording) RecordAutomationEvent();    // Event recording
 #endif
 
-#if !defined(SUPPORT_CUSTOM_FRAME_CONTROL)
+#if !SUPPORT_CUSTOM_FRAME_CONTROL
     SwapScreenBuffer();     // Copy back buffer to front buffer (screen)
     FrameTimeControl();     // Frame time control system
     PollInputEvents();      // Poll user events (before next frame update)
@@ -1287,8 +1287,8 @@ Shader LoadShaderFromMemory(const char *vsCode, const char *fsCode)
 // Check if a shader is valid (loaded on GPU)
 bool IsShaderValid(Shader shader)
 {
-    return ((shader.id > 0) &&         // Validate shader id (GPU loaded successfully)
-            (shader.locs != NULL));    // Validate memory has been allocated for default shader locations
+    return ((shader.id > 0) &&          // Validate shader id (GPU loaded successfully)
+            (shader.locs != NULL));     // Validate memory has been allocated for default shader locations
 
     // The following locations are tried to be set automatically (locs[i] >= 0),
     // any of them can be checked for validation but the only mandatory one is, afaik, SHADER_LOC_VERTEX_POSITION
@@ -1317,16 +1317,17 @@ bool IsShaderValid(Shader shader)
 }
 
 // Unload shader from GPU memory (VRAM)
-void UnloadShader(Shader *shader)
+Shader UnloadShader(Shader shader)
 {
-    if (shader->id != rlGetShaderIdDefault())
+    if (shader.id != rlGetShaderIdDefault())
     {
-        rlUnloadShaderProgram(shader->id);
+        rlUnloadShaderProgram(shader.id);
 
         // NOTE: If shader loading failed, it should be 0
-        RL_FREE(shader->locs);
-        shader->locs = NULL;
+        RL_FREE_NULL(shader.locs);
     }
+	
+	return shader;
 }
 
 // Get shader uniform location
@@ -2764,14 +2765,16 @@ FilePathList LoadDirectoryFilesEx(const char *basePath, const char *filter, bool
 
 // Unload directory filepaths
 // WARNING: files.count is not reseted to 0 after unloading
-void UnloadDirectoryFiles(FilePathList files)
+FilePathList UnloadDirectoryFiles(FilePathList files)
 {
     if (files.paths != NULL)
     {
         for (unsigned int i = 0; i < files.count; i++) RL_FREE(files.paths[i]);
 
-        RL_FREE(files.paths);
+        RL_FREE_NULL(files.paths);
     }
+	
+    return files;
 }
 
 // Create directories (including full path requested), returns 0 on success
@@ -2909,7 +2912,7 @@ FilePathList LoadDroppedFiles(void)
 }
 
 // Unload dropped filepaths
-void UnloadDroppedFiles(FilePathList files)
+FilePathList UnloadDroppedFiles(FilePathList files)
 {
     // WARNING: files pointers are the same as internal ones
 
@@ -2917,11 +2920,13 @@ void UnloadDroppedFiles(FilePathList files)
     {
         for (unsigned int i = 0; i < files.count; i++) RL_FREE(files.paths[i]);
 
-        RL_FREE(files.paths);
+        RL_FREE_NULL(files.paths);
 
         CORE.Window.dropFileCount = 0;
         CORE.Window.dropFilepaths = NULL;
     }
+	
+    return files;
 }
 
 // Get the file count in a directory
@@ -3620,11 +3625,15 @@ AutomationEventList LoadAutomationEventList(const char *fileName)
 }
 
 // Unload automation events list from file
-void UnloadAutomationEventList(AutomationEventList *list)
+AutomationEventList UnloadAutomationEventList(AutomationEventList list)
 {
 #if SUPPORT_AUTOMATION_EVENTS
+    list.capacity = 0;
+    list.count = 0;
     RL_FREE_NULL(list.events);
 #endif
+
+    return list;
 }
 
 // Export automation events list as text file

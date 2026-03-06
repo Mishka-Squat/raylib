@@ -159,8 +159,8 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadRenderTexture(&screenCamera1); // Unload render texture
-    UnloadRenderTexture(&screenCamera2); // Unload render texture
+    UnloadRenderTexture(screenCamera1); // Unload render texture
+    UnloadRenderTexture(screenCamera2); // Unload render texture
 
     CloseWindow();                      // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

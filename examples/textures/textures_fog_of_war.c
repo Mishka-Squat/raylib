@@ -152,7 +152,7 @@ int main(void)
     free(map.tileIds);      // Free allocated map tile ids
     free(map.tileFog);      // Free allocated map tile fog state
 
-    UnloadRenderTexture(&fogOfWar);  // Unload render texture
+    UnloadRenderTexture(fogOfWar);  // Unload render texture
 
     CloseWindow();          // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

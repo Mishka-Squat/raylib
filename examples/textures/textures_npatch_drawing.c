@@ -107,7 +107,7 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadTexture(&nPatchTexture);       // Texture unloading
+    UnloadTexture(nPatchTexture);       // Texture unloading
 
     CloseWindow();                // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

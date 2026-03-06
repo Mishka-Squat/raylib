@@ -300,9 +300,9 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadFont(&fontDefault);    // Unload font resource
-    UnloadFont(&fontAsian);      // Unload font resource
-    UnloadFont(&fontEmoji);      // Unload font resource
+    UnloadFont(fontDefault);    // Unload font resource
+    UnloadFont(fontAsian);      // Unload font resource
+    UnloadFont(fontEmoji);      // Unload font resource
 
     CloseWindow();              // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

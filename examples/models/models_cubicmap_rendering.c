@@ -47,7 +47,7 @@ int main(void)
 
     Vector3 mapPosition = { -16.0f, 0.0f, -8.0f };          // Set model position
 
-    UnloadImage(&image);     // Unload cubesmap image from RAM, already uploaded to VRAM
+    UnloadImage(image);     // Unload cubesmap image from RAM, already uploaded to VRAM
 
     bool pause = false;     // Pause camera orbital rotation (and zoom)
 
@@ -90,9 +90,9 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadTexture(&cubicmap);    // Unload cubicmap texture
-    UnloadTexture(&texture);     // Unload map texture
-    UnloadModel(&model);         // Unload map model
+    UnloadTexture(cubicmap);    // Unload cubicmap texture
+    UnloadTexture(texture);     // Unload map texture
+    UnloadModel(model);         // Unload map model
 
     CloseWindow();              // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

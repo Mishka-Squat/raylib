@@ -183,7 +183,7 @@ int main(void)
     // De-Initialization
     //--------------------------------------------------------------------------------------
     // Unload models data (GPU VRAM)
-    for (int i = 0; i < MAX_VOX_FILES; i++) UnloadModel(&models[i]);
+    for (int i = 0; i < MAX_VOX_FILES; i++) UnloadModel(models[i]);
 
     CloseWindow();          // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

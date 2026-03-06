@@ -37,7 +37,7 @@ int main(void)
 
     Image imBlank = GenImageColor(1024, 1024, BLANK);
     Texture2D texture = LoadTextureFromImage(imBlank);  // Load blank texture to fill on shader
-    UnloadImage(&imBlank);
+    UnloadImage(imBlank);
 
     // NOTE: Using GLSL 330 shader version, on OpenGL ES 2.0 use GLSL 100 shader version
     Shader shader = LoadShader(0, TextFormat("resources/shaders/glsl%i/cubes_panning.fs", GLSL_VERSION));
@@ -76,8 +76,8 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadShader(&shader);
-    UnloadTexture(&texture);
+    UnloadShader(shader);
+    UnloadTexture(texture);
 
     CloseWindow();        // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

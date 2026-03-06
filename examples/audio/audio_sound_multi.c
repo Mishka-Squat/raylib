@@ -79,8 +79,8 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    for (int i = 1; i < MAX_SOUNDS; i++) UnloadSoundAlias(&soundArray[i]);      // Unload sound aliases
-    UnloadSound(&soundArray[0]);                                                // Unload source sound data
+    for (int i = 1; i < MAX_SOUNDS; i++) UnloadSoundAlias(soundArray[i]);      // Unload sound aliases
+    UnloadSound(soundArray[0]);                                                // Unload source sound data
 
     CloseAudioDevice();     // Close audio device
 

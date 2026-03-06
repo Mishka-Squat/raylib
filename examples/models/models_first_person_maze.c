@@ -48,7 +48,7 @@ int main(void)
 
     // Get map image data to be used for collision detection
     Color *mapPixels = LoadImageColors(imMap);
-    UnloadImage(&imMap);             // Unload image from RAM
+    UnloadImage(imMap);             // Unload image from RAM
 
     Vector3 mapPosition = { -16.0f, 0.0f, -8.0f };  // Set model position
 
@@ -128,9 +128,9 @@ int main(void)
     //--------------------------------------------------------------------------------------
     UnloadImageColors(mapPixels);   // Unload color array
 
-    UnloadTexture(&cubicmap);        // Unload cubicmap texture
-    UnloadTexture(&texture);         // Unload map texture
-    UnloadModel(&model);             // Unload map model
+    UnloadTexture(cubicmap);        // Unload cubicmap texture
+    UnloadTexture(texture);         // Unload map texture
+    UnloadModel(model);             // Unload map model
 
     CloseWindow();                  // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

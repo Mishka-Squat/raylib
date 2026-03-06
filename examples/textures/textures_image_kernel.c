@@ -86,10 +86,10 @@ int main(void)
 
     // Once images have been converted to texture and uploaded to VRAM,
     // they can be unloaded from RAM
-    UnloadImage(&image);
-    UnloadImage(&catGaussian);
-    UnloadImage(&catSobel);
-    UnloadImage(&catSharpend);
+    UnloadImage(image);
+    UnloadImage(catGaussian);
+    UnloadImage(catSobel);
+    UnloadImage(catSharpend);
 
     SetTargetFPS(60);     // Set our game to run at 60 frames-per-second
     //---------------------------------------------------------------------------------------
@@ -119,10 +119,10 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadTexture(&texture);
-    UnloadTexture(&catGaussianTexture);
-    UnloadTexture(&catSobelTexture);
-    UnloadTexture(&catSharpendTexture);
+    UnloadTexture(texture);
+    UnloadTexture(catGaussianTexture);
+    UnloadTexture(catSobelTexture);
+    UnloadTexture(catSharpendTexture);
 
     CloseWindow();                // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

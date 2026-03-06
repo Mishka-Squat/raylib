@@ -85,7 +85,7 @@ int main(void)
                     IsFileExtension(droppedFiles.paths[0], ".iqm") ||
                     IsFileExtension(droppedFiles.paths[0], ".m3d"))       // Model file formats supported
                 {
-                    UnloadModel(&model);                         // Unload previous model
+                    UnloadModel(model);                         // Unload previous model
                     model = LoadModel(droppedFiles.paths[0]);   // Load new model
                     model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = texture; // Set current map diffuse texture
 
@@ -99,7 +99,7 @@ int main(void)
                 else if (IsFileExtension(droppedFiles.paths[0], ".png"))  // Texture file formats supported
                 {
                     // Unload current model texture and load new one
-                    UnloadTexture(&texture);
+                    UnloadTexture(texture);
                     texture = LoadTexture(droppedFiles.paths[0]);
                     model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = texture;
                 }
@@ -146,8 +146,8 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadTexture(&texture);     // Unload texture
-    UnloadModel(&model);         // Unload model
+    UnloadTexture(texture);     // Unload texture
+    UnloadModel(model);         // Unload model
 
     CloseWindow();              // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

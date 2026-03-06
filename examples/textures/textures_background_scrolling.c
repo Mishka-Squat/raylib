@@ -83,9 +83,9 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadTexture(&background);  // Unload background texture
-    UnloadTexture(&midground);   // Unload midground texture
-    UnloadTexture(&foreground);  // Unload foreground texture
+    UnloadTexture(background);  // Unload background texture
+    UnloadTexture(midground);   // Unload midground texture
+    UnloadTexture(foreground);  // Unload foreground texture
 
     CloseWindow();              // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

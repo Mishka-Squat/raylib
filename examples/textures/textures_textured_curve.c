@@ -144,7 +144,7 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadTexture(&texRoad);
+    UnloadTexture(texRoad);
     
     CloseWindow();              // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

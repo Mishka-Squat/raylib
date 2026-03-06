@@ -54,7 +54,7 @@ int main(void)
     // Parameters > glyphs count: 95, font size: 16, glyphs padding in image: 4 px, pack method: 0 (default)
     Image atlas = GenImageFontAtlas(fontDefault.glyphs, &fontDefault.recs, 95, 16, 4, 0);
     fontDefault.texture = LoadTextureFromImage(atlas);
-    UnloadImage(&atlas);
+    UnloadImage(atlas);
 
     // SDF font generation from TTF font
     Font fontSDF = { 0 };
@@ -66,7 +66,7 @@ int main(void)
     // Parameters > glyphs count: 95, font size: 16, glyphs padding in image: 0 px, pack method: 1 (Skyline algorythm)
     atlas = GenImageFontAtlas(fontSDF.glyphs, &fontSDF.recs, 95, 16, 0, 1);
     fontSDF.texture = LoadTextureFromImage(atlas);
-    UnloadImage(&atlas);
+    UnloadImage(atlas);
 
     UnloadFileData(fileData);      // Free memory from loaded file
 
@@ -137,10 +137,10 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadFont(&fontDefault);    // Default font unloading
-    UnloadFont(&fontSDF);        // SDF font unloading
+    UnloadFont(fontDefault);    // Default font unloading
+    UnloadFont(fontSDF);        // SDF font unloading
 
-    UnloadShader(&shader);       // Unload SDF shader
+    UnloadShader(shader);       // Unload SDF shader
 
     CloseWindow();              // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

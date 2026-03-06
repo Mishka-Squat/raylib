@@ -143,8 +143,8 @@ int main(void)
     //--------------------------------------------------------------------------------------
     RL_FREE(indexBuffer);
     RL_FREE(flameRootBuffer);
-    UnloadTexture(&screenTexture);
-    UnloadImage(&screenImage);
+    UnloadTexture(screenTexture);
+    UnloadImage(screenImage);
 
     CloseWindow();        // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

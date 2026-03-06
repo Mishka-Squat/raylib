@@ -237,7 +237,7 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadRenderTexture(&bulletTexture); // Unload bullet texture
+    UnloadRenderTexture(bulletTexture); // Unload bullet texture
 
     RL_FREE(bullets);     // Free bullets array data
 

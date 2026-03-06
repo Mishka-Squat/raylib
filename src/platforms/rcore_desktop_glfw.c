@@ -738,8 +738,7 @@ void SetWindowSize(int width, int height)
     CORE.Window.screen.width = width;
     CORE.Window.screen.height = height;
 
-    Vector2 scaleDpi = GetWindowScaleDPI();
-    glfwSetWindowSize(platform.handle, width * scaleDpi.x, height * scaleDpi.y);
+    glfwSetWindowSize(platform.handle, width, height);
 }
 
 // Set window opacity, value opacity is between 0.0 and 1.0

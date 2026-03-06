@@ -169,12 +169,12 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadShader(&shader);
-    UnloadRenderTexture(&bufferA);
-    UnloadTexture(&fftTexture);
-    UnloadImage(&fftImage);
-    UnloadAudioStream(&audioStream);
-    UnloadWave(&wav);
+    UnloadShader(shader);
+    UnloadRenderTexture(bufferA);
+    UnloadTexture(fftTexture);
+    UnloadImage(fftImage);
+    UnloadAudioStream(audioStream);
+    UnloadWave(wav);
     CloseAudioDevice();
 
     RL_FREE(fft.spectrum);

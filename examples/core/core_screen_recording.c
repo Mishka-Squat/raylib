@@ -110,7 +110,7 @@ int main(void)
                 msf_gif_frame(&gifState, imScreen.data, (int)((1.0f/60.0f)*GIF_RECORD_FRAMERATE)/10, 16, imScreen.width*4);
                 gifFrameCounter = 0;
 
-                UnloadImage(&imScreen);    // Free image data
+                UnloadImage(imScreen);    // Free image data
             }
         }
         //----------------------------------------------------------------------------------

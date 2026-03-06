@@ -163,8 +163,8 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadShader(&shader);
-    UnloadModel(&plane);
+    UnloadShader(shader);
+    UnloadModel(plane);
 
     CloseWindow(); // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

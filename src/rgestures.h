@@ -44,14 +44,14 @@
 #define RGESTURES_H
 
 #ifndef PI
-#define PI 3.14159265358979323846
+    #define PI 3.14159265358979323846
 #endif
 
 //----------------------------------------------------------------------------------
 // Defines and Macros
 //----------------------------------------------------------------------------------
 #ifndef MAX_TOUCH_POINTS
-#define MAX_TOUCH_POINTS        8        // Maximum number of touch points supported
+    #define MAX_TOUCH_POINTS        8        // Maximum number of touch points supported
 #endif
 
 //----------------------------------------------------------------------------------
@@ -60,9 +60,9 @@
 //----------------------------------------------------------------------------------
 // Boolean type
 #if (defined(__STDC__) && __STDC_VERSION__ >= 199901L) || (defined(_MSC_VER) && _MSC_VER >= 1800)
-#include <stdbool.h>
+    #include <stdbool.h>
 #elif !defined(__cplusplus) && !defined(bool) && !defined(RL_BOOL_TYPE)
-typedef enum bool{ false = 0, true = !false } bool;
+    typedef enum bool { false = 0, true = !false } bool;
 #endif
 
 #if !defined(RL_VECTOR2_TYPE)
@@ -153,28 +153,28 @@ float GetGesturePinchAngle(void);                       // Get gesture pinch ang
 
 #if defined(RGESTURES_STANDALONE)
 #if defined(_WIN32)
-#if defined(__cplusplus)
-extern "C" {        // Prevents name mangling of functions
-#endif
+    #if defined(__cplusplus)
+    extern "C" {        // Prevents name mangling of functions
+    #endif
     // Functions required to query time on Windows
     int __stdcall QueryPerformanceCounter(unsigned long long int *lpPerformanceCount);
     int __stdcall QueryPerformanceFrequency(unsigned long long int *lpFrequency);
-#if defined(__cplusplus)
-}
-#endif
+    #if defined(__cplusplus)
+    }
+    #endif
 #elif defined(__linux__)
-#if _POSIX_C_SOURCE < 199309L
-#undef _POSIX_C_SOURCE
-#define _POSIX_C_SOURCE 199309L // Required for CLOCK_MONOTONIC if compiled with c99 without gnu ext.
-#endif
-#include <sys/time.h>               // Required for: timespec
-#include <time.h>                   // Required for: clock_gettime()
+    #if _POSIX_C_SOURCE < 199309L
+        #undef _POSIX_C_SOURCE
+        #define _POSIX_C_SOURCE 199309L // Required for CLOCK_MONOTONIC if compiled with c99 without gnu ext.
+    #endif
+    #include <sys/time.h>               // Required for: timespec
+    #include <time.h>                   // Required for: clock_gettime()
 
-#include <math.h>                   // Required for: sqrtf(), atan2f()
+    #include <math.h>                   // Required for: sqrtf(), atan2f()
 #endif
 #if defined(__APPLE__)                  // macOS also defines __MACH__
-#include <mach/clock.h>             // Required for: clock_get_time()
-#include <mach/mach.h>              // Required for: mach_timespec_t
+    #include <mach/clock.h>             // Required for: clock_get_time()
+    #include <mach/mach.h>              // Required for: mach_timespec_t
 #endif
 #endif
 
@@ -315,6 +315,7 @@ void ProcessGestureEvent(GestureEvent event)
             // A swipe can happen while the current gesture is drag, but (specially for web) also hold, so set upPosition for both cases
             if (GESTURES.current == GESTURE_DRAG || GESTURES.current == GESTURE_HOLD) GESTURES.Touch.upPosition = event.position[0];
 
+			// NOTE(iga): Did I changed Drag to Swipe for some reason? Need explanation of that difference.
             // NOTE: GESTURES.Drag.intensity dependent on the resolution of the screen
             GESTURES.Swipe.distance = rgVector2Distance(GESTURES.Swipe.start, GESTURES.Touch.upPosition);
             GESTURES.Swipe.intensity = GESTURES.Swipe.distance / (float)((rgGetCurrentTime() - GESTURES.Swipe.startTime));

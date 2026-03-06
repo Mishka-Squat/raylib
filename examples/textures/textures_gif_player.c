@@ -113,8 +113,8 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadTexture(&texScarfyAnim);   // Unload texture
-    UnloadImage(&imScarfyAnim);      // Unload image (contains all frames)
+    UnloadTexture(texScarfyAnim);   // Unload texture
+    UnloadImage(imScarfyAnim);      // Unload image (contains all frames)
 
     CloseWindow();                  // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

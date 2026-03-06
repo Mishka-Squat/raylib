@@ -82,9 +82,9 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadFont(&font1);      // Font unloading
-    UnloadFont(&font2);      // Font unloading
-    UnloadFont(&font3);      // Font unloading
+    UnloadFont(font1);      // Font unloading
+    UnloadFont(font2);      // Font unloading
+    UnloadFont(font3);      // Font unloading
 
     CloseWindow();          // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

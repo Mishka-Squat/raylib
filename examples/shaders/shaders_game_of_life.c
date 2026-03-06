@@ -114,7 +114,7 @@ int main(void)
 
     Image startPattern = LoadImage("resources/game_of_life/r_pentomino.png");
     UpdateTextureRec(world2.texture, (Rectangle){ worldWidth/2.0f, worldHeight/2.0f, (float)(startPattern.width), (float)(startPattern.height) }, startPattern.data);
-    UnloadImage(&startPattern);
+    UnloadImage(startPattern);
 
     // Pointers to the two textures, to be swapped
     RenderTexture2D *currentWorld = &world2;
@@ -186,7 +186,7 @@ int main(void)
                 imageToDraw = (Image*)RL_MALLOC(sizeof(Image));
                 *imageToDraw = LoadImageFromTexture(worldOnScreen.texture);
                 
-                UnloadRenderTexture(&worldOnScreen);
+                UnloadRenderTexture(worldOnScreen);
             }
 
             const Vector2 mousePosition = GetMousePosition();
@@ -255,7 +255,7 @@ int main(void)
                 }
             }
 
-            UnloadImage(&pattern);
+            UnloadImage(pattern);
             
             mode = MODE_PAUSE;
             offsetX = worldWidth*presetPatterns[preset].position.x - (float)windowWidth/zoom/2.0f;
@@ -327,9 +327,9 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadShader(&shdrGameOfLife);
-    UnloadRenderTexture(&world1);
-    UnloadRenderTexture(&world2);
+    UnloadShader(shdrGameOfLife);
+    UnloadRenderTexture(world1);
+    UnloadRenderTexture(world2);
 
     FreeImageToDraw(&imageToDraw);
 
@@ -346,7 +346,7 @@ void FreeImageToDraw(Image **imageToDraw)
 {
     if (*imageToDraw != NULL)
     {
-        UnloadImage(*imageToDraw);
+        UnloadImage(**imageToDraw);
         RL_FREE(*imageToDraw);
         *imageToDraw = NULL;
     }

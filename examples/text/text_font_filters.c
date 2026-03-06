@@ -91,7 +91,7 @@ int main(void)
             // NOTE: We only support first ttf file dropped
             if (IsFileExtension(droppedFiles.paths[0], ".ttf"))
             {
-                UnloadFont(&font);
+                UnloadFont(font);
                 font = LoadFontEx(droppedFiles.paths[0], (int)fontSize, 0, 0);
             }
 
@@ -130,7 +130,7 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadFont(&font);           // Font unloading
+    UnloadFont(font);           // Font unloading
 
     CloseWindow();              // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

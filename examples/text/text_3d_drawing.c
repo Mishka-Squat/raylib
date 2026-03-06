@@ -155,12 +155,12 @@ int main(void)
             // NOTE: We only support first ttf file dropped
             if (IsFileExtension(droppedFiles.paths[0], ".ttf"))
             {
-                UnloadFont(&font);
+                UnloadFont(font);
                 font = LoadFontEx(droppedFiles.paths[0], (int)fontSize, 0, 0);
             }
             else if (IsFileExtension(droppedFiles.paths[0], ".fnt"))
             {
-                UnloadFont(&font);
+                UnloadFont(font);
                 font = LoadFont(droppedFiles.paths[0]);
                 fontSize = (float)font.baseSize;
             }
@@ -442,7 +442,7 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadFont(&font);
+    UnloadFont(font);
     CloseWindow();        // Close window and OpenGL context
     //--------------------------------------------------------------------------------------
 

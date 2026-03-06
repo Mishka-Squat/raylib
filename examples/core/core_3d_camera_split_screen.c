@@ -166,8 +166,8 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadRenderTexture(&screenPlayer1); // Unload render texture
-    UnloadRenderTexture(&screenPlayer2); // Unload render texture
+    UnloadRenderTexture(screenPlayer1); // Unload render texture
+    UnloadRenderTexture(screenPlayer2); // Unload render texture
 
     CloseWindow();                      // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

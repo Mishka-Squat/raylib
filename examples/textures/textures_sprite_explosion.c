@@ -115,8 +115,8 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadTexture(&explosion);   // Unload texture
-    UnloadSound(&fxBoom);        // Unload sound
+    UnloadTexture(explosion);   // Unload texture
+    UnloadSound(fxBoom);        // Unload sound
 
     CloseAudioDevice();
 

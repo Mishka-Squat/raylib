@@ -146,8 +146,8 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadRenderTexture(&observerTarget);
-    UnloadRenderTexture(&subjectTarget);
+    UnloadRenderTexture(observerTarget);
+    UnloadRenderTexture(subjectTarget);
 
     CloseWindow();        // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

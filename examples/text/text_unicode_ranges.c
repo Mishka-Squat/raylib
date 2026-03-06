@@ -54,7 +54,7 @@ int main(void)
         //----------------------------------------------------------------------------------
         if (unicodeRange != prevUnicodeRange)
         {
-            UnloadFont(&font);
+            UnloadFont(font);
 
             // Load font with default Unicode range: Basic ASCII [32-127]
             font = LoadFont("resources/NotoSansTC-Regular.ttf");
@@ -168,7 +168,7 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadFont(&font);        // Unload font resource
+    UnloadFont(font);        // Unload font resource
 
     CloseWindow();              // Close window and OpenGL context
     //--------------------------------------------------------------------------------------
@@ -198,7 +198,7 @@ static void AddCodepointRange(Font *font, const char *fontPath, int start, int s
     for (int i = currentRangeSize; i < updatedCodepointCount; i++)
         updatedCodepoints[i] = start + (i - currentRangeSize);
 
-    UnloadFont(font);
+    UnloadFont(*font);
     *font = LoadFontEx(fontPath, 32, updatedCodepoints, updatedCodepointCount);
     RL_FREE(updatedCodepoints);
 }

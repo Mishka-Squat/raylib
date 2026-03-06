@@ -37,7 +37,7 @@ int main(void)
     // We generate a checked image for texturing
     Image checked = GenImageChecked(2, 2, 1, 1, RED, GREEN);
     Texture2D texture = LoadTextureFromImage(checked);
-    UnloadImage(&checked);
+    UnloadImage(checked);
 
     Model models[NUM_MODELS] = { 0 };
 
@@ -128,10 +128,10 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadTexture(&texture); // Unload texture
+    UnloadTexture(texture); // Unload texture
 
     // Unload models data (GPU VRAM)
-    for (int i = 0; i < NUM_MODELS; i++) UnloadModel(&models[i]);
+    for (int i = 0; i < NUM_MODELS; i++) UnloadModel(models[i]);
 
     CloseWindow();          // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

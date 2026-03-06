@@ -44,7 +44,7 @@ int main(void)
     model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = texture; // Set map diffuse texture
     Vector3 mapPosition = { -8.0f, 0.0f, -8.0f };           // Define model position
 
-    UnloadImage(&image);             // Unload heightmap image from RAM, already uploaded to VRAM
+    UnloadImage(image);             // Unload heightmap image from RAM, already uploaded to VRAM
 
     SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
     //--------------------------------------------------------------------------------------
@@ -82,8 +82,8 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadTexture(&texture);     // Unload texture
-    UnloadModel(&model);         // Unload model
+    UnloadTexture(texture);     // Unload texture
+    UnloadModel(model);         // Unload model
 
     CloseWindow();              // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

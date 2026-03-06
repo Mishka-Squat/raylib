@@ -114,10 +114,10 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadModel(&cube);              // Unload model
-    UnloadModel(&floor);             // Unload model
+    UnloadModel(cube);              // Unload model
+    UnloadModel(floor);             // Unload model
     UnloadRenderTextureDepthTex(target);
-    UnloadShader(&depthShader);      // Unload shader
+    UnloadShader(depthShader);      // Unload shader
 
     CloseWindow();        // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

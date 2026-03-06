@@ -136,7 +136,7 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadTexture(&smoke);
+    UnloadTexture(smoke);
 
     CloseWindow();        // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

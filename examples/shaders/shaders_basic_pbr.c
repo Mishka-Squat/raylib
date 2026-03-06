@@ -279,16 +279,16 @@ int main(void)
     // Unbind (disconnect) shader from car.material[0]
     // to avoid UnloadMaterial() trying to unload it automatically
     car.materials[0].shader = (Shader){ 0 };
-    UnloadMaterial(&car.materials[0]);
+    UnloadMaterial(car.materials[0]);
     car.materials[0].maps = NULL;
-    UnloadModel(&car);
+    UnloadModel(car);
     
     floor.materials[0].shader = (Shader){ 0 };
-    UnloadMaterial(&floor.materials[0]);
+    UnloadMaterial(floor.materials[0]);
     floor.materials[0].maps = NULL;
-    UnloadModel(&floor);
+    UnloadModel(floor);
     
-    UnloadShader(&shader);       // Unload Shader
+    UnloadShader(shader);       // Unload Shader
     
     CloseWindow();              // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

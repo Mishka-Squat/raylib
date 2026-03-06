@@ -201,8 +201,8 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadImage(&image);
-    UnloadTexture(&texture);
+    UnloadImage(image);
+    UnloadTexture(texture);
 
     CloseWindow();              // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

@@ -36,7 +36,7 @@ int main(void)
     // Load RAW image data (512x512, 32bit RGBA, no file header)
     Image fudesumiRaw = LoadImageRaw("resources/fudesumi.raw", 384, 512, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8, 0);
     Texture2D fudesumi = LoadTextureFromImage(fudesumiRaw);  // Upload CPU (RAM) image to GPU (VRAM)
-    UnloadImage(&fudesumiRaw);                                // Unload CPU (RAM) image data
+    UnloadImage(fudesumiRaw);                                // Unload CPU (RAM) image data
 
     // Generate a checked texture by code
     int width = 960;
@@ -64,7 +64,7 @@ int main(void)
     };
 
     Texture2D checked = LoadTextureFromImage(checkedIm);
-    UnloadImage(&checkedIm);         // Unload CPU (RAM) image data (pixels)
+    UnloadImage(checkedIm);         // Unload CPU (RAM) image data (pixels)
 
     SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
     //---------------------------------------------------------------------------------------
@@ -98,8 +98,8 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadTexture(&fudesumi);    // Texture unloading
-    UnloadTexture(&checked);     // Texture unloading
+    UnloadTexture(fudesumi);    // Texture unloading
+    UnloadTexture(checked);     // Texture unloading
 
     CloseWindow();              // Close window and OpenGL context
     //--------------------------------------------------------------------------------------
