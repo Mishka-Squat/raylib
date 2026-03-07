@@ -3723,9 +3723,14 @@ void SetAutomationEventList(AutomationEventList list)
 }
 
 // Set automation event internal base frame to start recording
-void SetAutomationEventBaseFrame(int frame)
+void ResetAutomationEventBaseFrame(void)
 {
-    automationEventBaseFrame = frame;
+    automationEventBaseFrame = CORE.Time.frameCounter;
+}
+
+unsigned int GetAutomationEventFrame(void)
+{
+    return CORE.Time.frameCounter - automationEventBaseFrame;
 }
 
 // Start recording automation events (AutomationEventList must be set)
@@ -4400,7 +4405,7 @@ static void PlayAutomationEvents(void)
 static void RecordAutomationEvents(void)
 {
     if (currentEventList.count == currentEventList.capacity) return;
-    unsigned int automationEventFrame = CORE.Time.frameCounter - automationEventBaseFrame;
+    unsigned int automationEventFrame = GetAutomationEventFrame();
 
     // Keyboard input events recording
     //-------------------------------------------------------------------------------------
