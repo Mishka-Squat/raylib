@@ -3728,6 +3728,11 @@ void ResetAutomationEventBaseFrame(void)
     automationEventBaseFrame = CORE.Time.frameCounter;
 }
 
+void SetAutomationEventBaseFrame(unsigned int frame)
+{
+    automationEventBaseFrame = CORE.Time.frameCounter + frame;
+}
+
 unsigned int GetAutomationEventFrame(void)
 {
     return CORE.Time.frameCounter - automationEventBaseFrame;

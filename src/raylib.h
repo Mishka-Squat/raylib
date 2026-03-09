@@ -1193,6 +1193,7 @@ RLAPI bool ExportAutomationEventList(AutomationEventList list, const char *fileN
 RLAPI AutomationEventList CurrentAutomationEventList(void);                             // Set automation event list to record to
 RLAPI void SetAutomationEventList(AutomationEventList list);                            // Set automation event list to record to
 RLAPI void ResetAutomationEventBaseFrame(void);                                         // Reset automation event internal base frame to current core frame
+RLAPI void SetAutomationEventBaseFrame(unsigned int frame);                             // Set automation event internal base frame
 RLAPI unsigned int GetAutomationEventFrame(void);                                       // Get current automation event frame
 RLAPI void StartAutomationEventRecording(void);                                         // Start recording automation events (AutomationEventList must be set)
 RLAPI void StopAutomationEventRecording(void);                                          // Stop recording automation events
