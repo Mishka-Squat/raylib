@@ -1322,14 +1322,14 @@ void PollInputEvents(void)
     // NOTE: Doing it here in case of disconnection
     for (int i = 0; i < MAX_GAMEPADS; i++)
     {
-        if (glfwJoystickPresent(i)) CORE.Input.Gamepad.ready[i] = true;
-        else CORE.Input.Gamepad.ready[i] = false;
+        if (glfwJoystickPresent(i)) INPUT_PRESS_KEY(CORE.Input.Gamepad.ready[i]);
+        else INPUT_RELEASE_KEY(CORE.Input.Gamepad.ready[i]);
     }
 
     // Register gamepads buttons events
     for (int i = 0; i < MAX_GAMEPADS; i++)
     {
-        if (CORE.Input.Gamepad.ready[i])     // Check if gamepad is available
+        if (INPUT_IS_PRESSED(CORE.Input.Gamepad.ready[i]))     // Check if gamepad is available
         {
             // Register previous gamepad states
             for (int k = 0; k < MAX_GAMEPAD_BUTTONS; k++) CORE.Input.Gamepad.previousButtonState[i][k] = CORE.Input.Gamepad.currentButtonState[i][k];
@@ -1379,10 +1379,10 @@ void PollInputEvents(void)
                 {
                     if (buttons[k] == GLFW_PRESS)
                     {
-                        CORE.Input.Gamepad.currentButtonState[i][button] = 1;
+                        INPUT_PRESS_KEY(CORE.Input.Gamepad.currentButtonState[i][button]);
                         CORE.Input.Gamepad.lastButtonPressed = button;
                     }
-                    else CORE.Input.Gamepad.currentButtonState[i][button] = 0;
+                    else INPUT_RELEASE_KEY(CORE.Input.Gamepad.currentButtonState[i][button]);
                 }
             }
 
@@ -1397,16 +1397,16 @@ void PollInputEvents(void)
             // Register buttons for 2nd triggers (because GLFW doesn't count these as buttons but rather as axes)
             if (CORE.Input.Gamepad.axisState[i][GAMEPAD_AXIS_LEFT_TRIGGER] > 0.1f)
             {
-                CORE.Input.Gamepad.currentButtonState[i][GAMEPAD_BUTTON_LEFT_TRIGGER_2] = 1;
+                INPUT_PRESS_KEY(CORE.Input.Gamepad.currentButtonState[i][GAMEPAD_BUTTON_LEFT_TRIGGER_2]);
                 CORE.Input.Gamepad.lastButtonPressed = GAMEPAD_BUTTON_LEFT_TRIGGER_2;
             }
-            else CORE.Input.Gamepad.currentButtonState[i][GAMEPAD_BUTTON_LEFT_TRIGGER_2] = 0;
+            else INPUT_RELEASE_KEY(CORE.Input.Gamepad.currentButtonState[i][GAMEPAD_BUTTON_LEFT_TRIGGER_2]);
             if (CORE.Input.Gamepad.axisState[i][GAMEPAD_AXIS_RIGHT_TRIGGER] > 0.1f)
             {
-                CORE.Input.Gamepad.currentButtonState[i][GAMEPAD_BUTTON_RIGHT_TRIGGER_2] = 1;
+                INPUT_PRESS_KEY(CORE.Input.Gamepad.currentButtonState[i][GAMEPAD_BUTTON_RIGHT_TRIGGER_2]);
                 CORE.Input.Gamepad.lastButtonPressed = GAMEPAD_BUTTON_RIGHT_TRIGGER_2;
             }
-            else CORE.Input.Gamepad.currentButtonState[i][GAMEPAD_BUTTON_RIGHT_TRIGGER_2] = 0;
+            else INPUT_RELEASE_KEY(CORE.Input.Gamepad.currentButtonState[i][GAMEPAD_BUTTON_RIGHT_TRIGGER_2]);
 
             CORE.Input.Gamepad.axisCount[i] = GLFW_GAMEPAD_AXIS_LAST + 1;
         }
@@ -1845,9 +1845,9 @@ int InitPlatform(void)
         // only copying up to (MAX_GAMEPAD_NAME_LENGTH - 1)
         if (glfwJoystickPresent(i))
         {
-          CORE.Input.Gamepad.ready[i] = true;
-          CORE.Input.Gamepad.axisCount[i] = GLFW_GAMEPAD_AXIS_LAST + 1;
-          strncpy(CORE.Input.Gamepad.name[i], glfwGetJoystickName(i), MAX_GAMEPAD_NAME_LENGTH - 1);
+            INPUT_PRESS_KEY(CORE.Input.Gamepad.ready[i]);
+            CORE.Input.Gamepad.axisCount[i] = GLFW_GAMEPAD_AXIS_LAST + 1;
+            strncpy(CORE.Input.Gamepad.name[i], glfwGetJoystickName(i), MAX_GAMEPAD_NAME_LENGTH - 1);
         }
     }
     //----------------------------------------------------------------------------
@@ -2074,13 +2074,13 @@ static void KeyCallback(GLFWwindow *window, int key, int scancode, int action, i
 
     // WARNING: GLFW could return GLFW_REPEAT, it needs to be considered as 1
     // to work properly with our implementation (IsKeyDown/IsKeyUp checks)
-    if (action == GLFW_RELEASE) CORE.Input.Keyboard.currentKeyState[key] = 0;
-    else if (action == GLFW_PRESS) CORE.Input.Keyboard.currentKeyState[key] = 1;
+    if (action == GLFW_RELEASE) INPUT_RELEASE_KEY(CORE.Input.Keyboard.currentKeyState[key]);
+    else if (action == GLFW_PRESS) INPUT_PRESS_KEY(CORE.Input.Keyboard.currentKeyState[key]);
     else if (action == GLFW_REPEAT) CORE.Input.Keyboard.keyRepeatInFrame[key] = 1;
 
     // WARNING: Check if CAPS/NUM key modifiers are enabled and force down state for those keys
     if (((key == KEY_CAPS_LOCK) && (FLAG_IS_SET(mods, GLFW_MOD_CAPS_LOCK))) ||
-        ((key == KEY_NUM_LOCK) && (FLAG_IS_SET(mods, GLFW_MOD_NUM_LOCK)))) CORE.Input.Keyboard.currentKeyState[key] = 1;
+        ((key == KEY_NUM_LOCK) && (FLAG_IS_SET(mods, GLFW_MOD_NUM_LOCK)))) INPUT_PRESS_KEY(CORE.Input.Keyboard.currentKeyState[key]);
 
     // Check if there is space available in the key queue
     if ((CORE.Input.Keyboard.keyPressedQueueCount < MAX_KEY_PRESSED_QUEUE) && (action == GLFW_PRESS))
@@ -2116,16 +2116,22 @@ static void MouseButtonCallback(GLFWwindow *window, int button, int action, int 
 {
     // WARNING: GLFW could only return GLFW_PRESS (1) or GLFW_RELEASE (0) for now,
     // but future releases may add more actions (i.e. GLFW_REPEAT)
-    CORE.Input.Mouse.currentButtonState[button] = action;
-    CORE.Input.Touch.currentTouchState[button] = action;
+    if (action == GLFW_PRESS) {
+        INPUT_PRESS_KEY(CORE.Input.Mouse.currentButtonState[button]);
+        INPUT_PRESS_KEY(CORE.Input.Touch.currentTouchState[button]);
+    }
+    else {
+        INPUT_RELEASE_KEY(CORE.Input.Mouse.currentButtonState[button]);
+        INPUT_RELEASE_KEY(CORE.Input.Touch.currentTouchState[button]);
+    }
 
 #if SUPPORT_GESTURES_SYSTEM && SUPPORT_MOUSE_GESTURES
     // Process mouse events as touches to be able to use mouse-gestures
     GestureEvent gestureEvent = { 0 };
 
     // Register touch actions
-    if ((CORE.Input.Mouse.currentButtonState[button] == 1) && (CORE.Input.Mouse.previousButtonState[button] == 0)) gestureEvent.touchAction = TOUCH_ACTION_DOWN;
-    else if ((CORE.Input.Mouse.currentButtonState[button] == 0) && (CORE.Input.Mouse.previousButtonState[button] == 1)) gestureEvent.touchAction = TOUCH_ACTION_UP;
+    if (INPUT_IS_PRESSED(CORE.Input.Mouse.currentButtonState[button]) && !INPUT_IS_PRESSED(CORE.Input.Mouse.previousButtonState[button])) gestureEvent.touchAction = TOUCH_ACTION_DOWN;
+    else if (!INPUT_IS_PRESSED(CORE.Input.Mouse.currentButtonState[button]) && INPUT_IS_PRESSED(CORE.Input.Mouse.previousButtonState[button])) gestureEvent.touchAction = TOUCH_ACTION_UP;
 
     // NOTE: TOUCH_ACTION_MOVE event is registered in MouseCursorPosCallback()
 

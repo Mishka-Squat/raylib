@@ -75,7 +75,7 @@ int main(void)
 
     // Automation events
     AutomationEventList aelist = LoadAutomationEventList(0);  // Initialize list of automation events to record new events
-    SetAutomationEventList(&aelist);
+    SetAutomationEventList(aelist);
     bool eventRecording = false;
     bool eventPlaying = false;
 
@@ -247,7 +247,7 @@ int main(void)
                 }
                 else
                 {
-                    ResetAutomationEventBaseFrame(180);
+                    SetAutomationEventBaseFrame(180);
                     StartAutomationEventRecording();
                     eventRecording = true;
                 }

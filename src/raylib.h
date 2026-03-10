@@ -1215,9 +1215,6 @@ RLAPI int GetCharPressed(void);                               // Get char presse
 RLAPI const char *GetKeyName(int key);                        // Get name of a QWERTY key on the current keyboard layout (eg returns string 'q' for KEY_A on an AZERTY keyboard)
 RLAPI void SetExitKey(int key);                               // Set a custom key to exit program (default is ESC)
 
-RLAPI void DebugGenerateKeyDown(int key);
-RLAPI void DebugGenerateKeyUp(int key);
-
 // Input-related functions: gamepads
 RLAPI bool IsGamepadAvailable(int gamepad);                   // Check if a gamepad is available
 RLAPI const char *GetGamepadName(int gamepad);                // Get gamepad internal name id
@@ -1230,12 +1227,6 @@ RLAPI int GetGamepadAxisCount(int gamepad);                   // Get axis count 
 RLAPI float GetGamepadAxisMovement(int gamepad, int axis);    // Get movement value for a gamepad axis
 RLAPI int SetGamepadMappings(const char *mappings);           // Set internal gamepad mappings (SDL_GameControllerDB)
 RLAPI void SetGamepadVibration(int gamepad, float leftMotor, float rightMotor, float duration); // Set gamepad vibration for both motors (duration in seconds)
-
-RLAPI void DebugGenerateGamepadConnect(int gamepad);
-RLAPI void DebugGenerateGamepadDisconnect(int gamepad);
-RLAPI void DebugGenerateGamepadButtonUp(int gamepad, int key);
-RLAPI void DebugGenerateGamepadButtonDown(int gamepad, int key);
-RLAPI void DebugGenerateGamepadAxisMotion(int gamepad, int axis, float delta);
 
 // Input-related functions: mouse
 RLAPI int GetMouseButtonDownCount(void);                      // Get buttons count of currently pressed mouse buttons. Doesn't count touches.
@@ -1255,21 +1246,12 @@ RLAPI Vector2 GetMouseWheelMoveV(void);                       // Get mouse wheel
 RLAPI void SetMouseCursor(int cursor);                        // Set mouse cursor
 RLAPI void SetMouseCursorImage(Image image, int xhot, int yhot); // Set mouse cursor image
 
-RLAPI void DebugGenerateMouseDown(int key);
-RLAPI void DebugGenerateMouseUp(int key);
-RLAPI void DebugGenerateMousePosition(float x, float y);
-RLAPI void DebugGenerateMouseWheelMove(float x, float y);
-
 // Input-related functions: touch
 RLAPI int GetTouchX(void);                                    // Get touch position X for touch point 0 (relative to screen size)
 RLAPI int GetTouchY(void);                                    // Get touch position Y for touch point 0 (relative to screen size)
 RLAPI Vector2 GetTouchPosition(int index);                    // Get touch position XY for a touch point index (relative to screen size)
 RLAPI int GetTouchPointId(int index);                         // Get touch point identifier for given index
 RLAPI int GetTouchPointCount(void);                           // Get number of touch points
-
-RLAPI void DebugGenerateTouchDown(int index);
-RLAPI void DebugGenerateTouchUp(int index);
-RLAPI void DebugGenerateTouchPosition(int index, float x, float y);
 
 //------------------------------------------------------------------------------------
 // Gestures and Touch Handling Functions (Module: rgestures)

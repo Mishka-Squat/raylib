@@ -286,8 +286,17 @@
 //----------------------------------------------------------------------------------
 // Types and Structures Definition
 //----------------------------------------------------------------------------------
+typedef struct { char v; } KeyState;
 typedef struct { int x; int y; } Point;
 typedef struct { unsigned int width; unsigned int height; } Size;
+
+#define ANY_IS_PRESSED(state) state.v
+#define INPUT_IS_PRESSED(state) (state.v & 1)
+#define INPUT_PRESS_KEY(state) state.v = state.v | 1
+#define INPUT_RELEASE_KEY(state) state.v = state.v & ~1
+#define AUTOMATION_IS_PRESSED(state) (state.v & 0x80)
+#define AUTOMATION_PRESS_KEY(state) state.v = state.v | 0x80
+#define AUTOMATION_RELEASE_KEY(state) state.v = state.v & ~0x80
 
 // Core global state context data
 typedef struct CoreData {
@@ -323,8 +332,8 @@ typedef struct CoreData {
     struct {
         struct {
             int exitKey;                    // Default exit key
-            char currentKeyState[MAX_KEYBOARD_KEYS]; // Registers current frame key state
-            char previousKeyState[MAX_KEYBOARD_KEYS]; // Registers previous frame key state
+            KeyState currentKeyState[MAX_KEYBOARD_KEYS]; // Registers current frame key state
+            KeyState previousKeyState[MAX_KEYBOARD_KEYS]; // Registers previous frame key state
 
             // NOTE: Since key press logic involves comparing previous vs currrent key state,
             // key repeats needs to be handled specially
@@ -350,8 +359,8 @@ typedef struct CoreData {
             bool cursorLocked;              // Track if cursor is locked (disabled)
             bool cursorOnScreen;            // Tracks if cursor is inside client area
 
-            char currentButtonState[MAX_MOUSE_BUTTONS]; // Registers current mouse button state
-            char previousButtonState[MAX_MOUSE_BUTTONS]; // Registers previous mouse button state
+            KeyState currentButtonState[MAX_MOUSE_BUTTONS]; // Registers current mouse button state
+            KeyState previousButtonState[MAX_MOUSE_BUTTONS]; // Registers previous mouse button state
             Vector2 currentWheelMove;       // Registers current mouse wheel variation
             Vector2 previousWheelMove;      // Registers previous mouse wheel variation
 
@@ -361,17 +370,17 @@ typedef struct CoreData {
             int pointId[MAX_TOUCH_POINTS];                  // Point identifiers
             Vector2 position[MAX_TOUCH_POINTS];             // Touch position on screen
             Vector2 previousPosition[MAX_TOUCH_POINTS];     // Previous touch position on screen
-            char currentTouchState[MAX_TOUCH_POINTS];       // Registers current touch state
-            char previousTouchState[MAX_TOUCH_POINTS];      // Registers previous touch state
+            KeyState currentTouchState[MAX_TOUCH_POINTS];       // Registers current touch state
+            KeyState previousTouchState[MAX_TOUCH_POINTS];      // Registers previous touch state
 
         } Touch;
         struct {
             int lastButtonPressed;          // Register last gamepad button pressed
             int axisCount[MAX_GAMEPADS];    // Register number of available gamepad axes
-            bool ready[MAX_GAMEPADS];       // Flag to know if gamepad is ready
+            KeyState ready[MAX_GAMEPADS];       // Flag to know if gamepad is ready
             char name[MAX_GAMEPADS][MAX_GAMEPAD_NAME_LENGTH];               // Gamepad name holder
-            char currentButtonState[MAX_GAMEPADS][MAX_GAMEPAD_BUTTONS];     // Current gamepad buttons state
-            char previousButtonState[MAX_GAMEPADS][MAX_GAMEPAD_BUTTONS];    // Previous gamepad buttons state
+            KeyState currentButtonState[MAX_GAMEPADS][MAX_GAMEPAD_BUTTONS];     // Current gamepad buttons state
+            KeyState previousButtonState[MAX_GAMEPADS][MAX_GAMEPAD_BUTTONS];    // Previous gamepad buttons state
             float axisState[MAX_GAMEPADS][MAX_GAMEPAD_AXES];                // Gamepad axes state
 
         } Gamepad;
@@ -3778,11 +3787,11 @@ void PlayAutomationEvent(AutomationEvent event)
         switch (event.type)
         {
             // Input event
-            case INPUT_KEY_UP: CORE.Input.Keyboard.currentKeyState[event.params[0]] = false; break;             // param[0]: key
+        case INPUT_KEY_UP: INPUT_RELEASE_KEY(CORE.Input.Keyboard.currentKeyState[event.params[0]]); break;      // param[0]: key
             case INPUT_KEY_DOWN: {                                                                              // param[0]: key
-                CORE.Input.Keyboard.currentKeyState[event.params[0]] = true;
+                INPUT_PRESS_KEY(CORE.Input.Keyboard.currentKeyState[event.params[0]]);
 
-                if (CORE.Input.Keyboard.previousKeyState[event.params[0]] == false)
+                if (INPUT_IS_PRESSED(CORE.Input.Keyboard.previousKeyState[event.params[0]]) == false)
                 {
                     if (CORE.Input.Keyboard.keyPressedQueueCount < MAX_KEY_PRESSED_QUEUE)
                     {
@@ -3792,8 +3801,8 @@ void PlayAutomationEvent(AutomationEvent event)
                     }
                 }
             } break;
-            case INPUT_MOUSE_BUTTON_UP: CORE.Input.Mouse.currentButtonState[event.params[0]] = false; break;    // param[0]: key
-            case INPUT_MOUSE_BUTTON_DOWN: CORE.Input.Mouse.currentButtonState[event.params[0]] = true; break;   // param[0]: key
+            case INPUT_MOUSE_BUTTON_UP: INPUT_RELEASE_KEY(CORE.Input.Mouse.currentButtonState[event.params[0]]); break;     // param[0]: key
+            case INPUT_MOUSE_BUTTON_DOWN: INPUT_PRESS_KEY(CORE.Input.Mouse.currentButtonState[event.params[0]]); break;     // param[0]: key
             case INPUT_MOUSE_POSITION:      // param[0]: x, param[1]: y
             {
                 CORE.Input.Mouse.currentPosition.x = (float)event.params[0];
@@ -3804,17 +3813,17 @@ void PlayAutomationEvent(AutomationEvent event)
                 CORE.Input.Mouse.currentWheelMove.x = (float)event.params[0];
                 CORE.Input.Mouse.currentWheelMove.y = (float)event.params[1];
             } break;
-            case INPUT_TOUCH_UP: CORE.Input.Touch.currentTouchState[event.params[0]] = false; break;            // param[0]: id
-            case INPUT_TOUCH_DOWN: CORE.Input.Touch.currentTouchState[event.params[0]] = true; break;           // param[0]: id
+            case INPUT_TOUCH_UP: INPUT_RELEASE_KEY(CORE.Input.Touch.currentTouchState[event.params[0]]); break;     // param[0]: id
+            case INPUT_TOUCH_DOWN: INPUT_PRESS_KEY(CORE.Input.Touch.currentTouchState[event.params[0]]); break;     // param[0]: id
             case INPUT_TOUCH_POSITION:      // param[0]: id, param[1]: x, param[2]: y
             {
                 CORE.Input.Touch.position[event.params[0]].x = (float)event.params[1];
                 CORE.Input.Touch.position[event.params[0]].y = (float)event.params[2];
             } break;
-            case INPUT_GAMEPAD_CONNECT: CORE.Input.Gamepad.ready[event.params[0]] = true; break;                // param[0]: gamepad
-            case INPUT_GAMEPAD_DISCONNECT: CORE.Input.Gamepad.ready[event.params[0]] = false; break;            // param[0]: gamepad
-            case INPUT_GAMEPAD_BUTTON_UP: CORE.Input.Gamepad.currentButtonState[event.params[0]][event.params[1]] = false; break;    // param[0]: gamepad, param[1]: button
-            case INPUT_GAMEPAD_BUTTON_DOWN: CORE.Input.Gamepad.currentButtonState[event.params[0]][event.params[1]] = true; break;   // param[0]: gamepad, param[1]: button
+            case INPUT_GAMEPAD_CONNECT: INPUT_PRESS_KEY(CORE.Input.Gamepad.ready[event.params[0]]); break;                                     // param[0]: gamepad
+            case INPUT_GAMEPAD_DISCONNECT: INPUT_RELEASE_KEY(CORE.Input.Gamepad.ready[event.params[0]]); break;                                // param[0]: gamepad
+            case INPUT_GAMEPAD_BUTTON_UP: INPUT_RELEASE_KEY(CORE.Input.Gamepad.currentButtonState[event.params[0]][event.params[1]]); break;   // param[0]: gamepad, param[1]: button
+            case INPUT_GAMEPAD_BUTTON_DOWN: INPUT_PRESS_KEY(CORE.Input.Gamepad.currentButtonState[event.params[0]][event.params[1]]); break;   // param[0]: gamepad, param[1]: button
             case INPUT_GAMEPAD_AXIS_MOTION: // param[0]: gamepad, param[1]: axis, param[2]: delta
             {
                 CORE.Input.Gamepad.axisState[event.params[0]][event.params[1]] = ((float)event.params[2]/32768.0f);
@@ -3855,7 +3864,7 @@ bool IsKeyPressed(int key)
 
     if ((key > 0) && (key < MAX_KEYBOARD_KEYS))
     {
-        if ((CORE.Input.Keyboard.previousKeyState[key] == 0) && (CORE.Input.Keyboard.currentKeyState[key] == 1)) pressed = true;
+        if (!ANY_IS_PRESSED(CORE.Input.Keyboard.previousKeyState[key]) && ANY_IS_PRESSED(CORE.Input.Keyboard.currentKeyState[key])) pressed = true;
     }
 
     return pressed;
@@ -3881,7 +3890,7 @@ bool IsKeyDown(int key)
 
     if ((key > 0) && (key < MAX_KEYBOARD_KEYS))
     {
-        if (CORE.Input.Keyboard.currentKeyState[key] == 1) down = true;
+        if (ANY_IS_PRESSED(CORE.Input.Keyboard.currentKeyState[key])) down = true;
     }
 
     return down;
@@ -3894,7 +3903,7 @@ bool IsKeyReleased(int key)
 
     if ((key > 0) && (key < MAX_KEYBOARD_KEYS))
     {
-        if ((CORE.Input.Keyboard.previousKeyState[key] == 1) && (CORE.Input.Keyboard.currentKeyState[key] == 0)) released = true;
+        if (ANY_IS_PRESSED(CORE.Input.Keyboard.previousKeyState[key]) && !ANY_IS_PRESSED(CORE.Input.Keyboard.currentKeyState[key])) released = true;
     }
 
     return released;
@@ -3907,7 +3916,7 @@ bool IsKeyUp(int key)
 
     if ((key > 0) && (key < MAX_KEYBOARD_KEYS))
     {
-        if (CORE.Input.Keyboard.currentKeyState[key] == 0) up = true;
+        if (!ANY_IS_PRESSED(CORE.Input.Keyboard.currentKeyState[key])) up = true;
     }
 
     return up;
@@ -3919,7 +3928,7 @@ int GetKeyDownCount(void)
 
     for (int key = 0; key < MAX_KEYBOARD_KEYS; key++)
     {
-        if (CORE.Input.Keyboard.currentKeyState[key] == 1) value++;
+        if (ANY_IS_PRESSED(CORE.Input.Keyboard.currentKeyState[key])) value++;
     }
 
     return value;
@@ -3988,7 +3997,7 @@ bool IsGamepadAvailable(int gamepad)
 {
     bool result = false;
 
-    if ((gamepad < MAX_GAMEPADS) && CORE.Input.Gamepad.ready[gamepad]) result = true;
+    if ((gamepad < MAX_GAMEPADS) && ANY_IS_PRESSED(CORE.Input.Gamepad.ready[gamepad])) result = true;
 
     return result;
 }
@@ -4004,9 +4013,9 @@ bool IsGamepadButtonPressed(int gamepad, int button)
 {
     bool pressed = false;
 
-    if ((gamepad < MAX_GAMEPADS) && CORE.Input.Gamepad.ready[gamepad] && (button < MAX_GAMEPAD_BUTTONS))
+    if ((gamepad < MAX_GAMEPADS) && ANY_IS_PRESSED(CORE.Input.Gamepad.ready[gamepad]) && (button < MAX_GAMEPAD_BUTTONS))
     {
-        if ((CORE.Input.Gamepad.previousButtonState[gamepad][button] == 0) && (CORE.Input.Gamepad.currentButtonState[gamepad][button] == 1)) pressed = true;
+        if (!ANY_IS_PRESSED(CORE.Input.Gamepad.previousButtonState[gamepad][button]) && ANY_IS_PRESSED(CORE.Input.Gamepad.currentButtonState[gamepad][button])) pressed = true;
     }
 
     return pressed;
@@ -4017,9 +4026,9 @@ bool IsGamepadButtonDown(int gamepad, int button)
 {
     bool down = false;
 
-    if ((gamepad < MAX_GAMEPADS) && CORE.Input.Gamepad.ready[gamepad] && (button < MAX_GAMEPAD_BUTTONS))
+    if ((gamepad < MAX_GAMEPADS) && ANY_IS_PRESSED(CORE.Input.Gamepad.ready[gamepad]) && (button < MAX_GAMEPAD_BUTTONS))
     {
-        if (CORE.Input.Gamepad.currentButtonState[gamepad][button] == 1) down = true;
+        if (ANY_IS_PRESSED(CORE.Input.Gamepad.currentButtonState[gamepad][button])) down = true;
     }
 
     return down;
@@ -4030,9 +4039,9 @@ bool IsGamepadButtonReleased(int gamepad, int button)
 {
     bool released = false;
 
-    if ((gamepad < MAX_GAMEPADS) && CORE.Input.Gamepad.ready[gamepad] && (button < MAX_GAMEPAD_BUTTONS))
+    if ((gamepad < MAX_GAMEPADS) && ANY_IS_PRESSED(CORE.Input.Gamepad.ready[gamepad]) && (button < MAX_GAMEPAD_BUTTONS))
     {
-        if ((CORE.Input.Gamepad.previousButtonState[gamepad][button] == 1) && (CORE.Input.Gamepad.currentButtonState[gamepad][button] == 0)) released = true;
+        if (ANY_IS_PRESSED(CORE.Input.Gamepad.previousButtonState[gamepad][button]) && !ANY_IS_PRESSED(CORE.Input.Gamepad.currentButtonState[gamepad][button])) released = true;
     }
 
     return released;
@@ -4043,9 +4052,9 @@ bool IsGamepadButtonUp(int gamepad, int button)
 {
     bool up = false;
 
-    if ((gamepad < MAX_GAMEPADS) && CORE.Input.Gamepad.ready[gamepad] && (button < MAX_GAMEPAD_BUTTONS))
+    if ((gamepad < MAX_GAMEPADS) && ANY_IS_PRESSED(CORE.Input.Gamepad.ready[gamepad]) && (button < MAX_GAMEPAD_BUTTONS))
     {
-        if (CORE.Input.Gamepad.currentButtonState[gamepad][button] == 0) up = true;
+        if (!ANY_IS_PRESSED(CORE.Input.Gamepad.currentButtonState[gamepad][button])) up = true;
     }
 
     return up;
@@ -4069,7 +4078,7 @@ float GetGamepadAxisMovement(int gamepad, int axis)
 {
     float value = ((axis == GAMEPAD_AXIS_LEFT_TRIGGER) || (axis == GAMEPAD_AXIS_RIGHT_TRIGGER))? -1.0f : 0.0f;
 
-    if ((gamepad < MAX_GAMEPADS) && CORE.Input.Gamepad.ready[gamepad] && (axis < MAX_GAMEPAD_AXES))
+    if ((gamepad < MAX_GAMEPADS) && ANY_IS_PRESSED(CORE.Input.Gamepad.ready[gamepad]) && (axis < MAX_GAMEPAD_AXES))
     {
         float movement = (value < 0.0f)? CORE.Input.Gamepad.axisState[gamepad][axis] : fabsf(CORE.Input.Gamepad.axisState[gamepad][axis]);
 
@@ -4093,14 +4102,14 @@ int GetMouseButtonDownCount(void)
 
     for (int button = 0; button < MAX_MOUSE_BUTTONS; button++)
     {
-        if (CORE.Input.Mouse.currentButtonState[button] == 1) value++;
+        if (ANY_IS_PRESSED(CORE.Input.Mouse.currentButtonState[button])) value++;
     }
 
     // Ignore touches count only real mouse buttons
     /*
     for (int touch = 0; touch < MAX_TOUCH_POINTS; touch++)
     {
-        if (CORE.Input.Touch.currentTouchState[touch] == 1) value++;
+        if (ANY_IS_PRESSED(CORE.Input.Touch.currentTouchState[touch])) value++;
     }
     */
 
@@ -4114,10 +4123,10 @@ bool IsMouseButtonPressed(int button)
 
     if ((button >= 0) && (button <= MOUSE_BUTTON_BACK))
     {
-        if ((CORE.Input.Mouse.currentButtonState[button] == 1) && (CORE.Input.Mouse.previousButtonState[button] == 0)) pressed = true;
+        if (ANY_IS_PRESSED(CORE.Input.Mouse.currentButtonState[button]) && !ANY_IS_PRESSED(CORE.Input.Mouse.previousButtonState[button])) pressed = true;
 
         // Map touches to mouse buttons checking
-        if ((CORE.Input.Touch.currentTouchState[button] == 1) && (CORE.Input.Touch.previousTouchState[button] == 0)) pressed = true;
+        if (ANY_IS_PRESSED(CORE.Input.Touch.currentTouchState[button]) && !ANY_IS_PRESSED(CORE.Input.Touch.previousTouchState[button])) pressed = true;
     }
 
     return pressed;
@@ -4130,10 +4139,10 @@ bool IsMouseButtonDown(int button)
 
     if ((button >= 0) && (button <= MOUSE_BUTTON_BACK))
     {
-        if (CORE.Input.Mouse.currentButtonState[button] == 1) down = true;
+        if (ANY_IS_PRESSED(CORE.Input.Mouse.currentButtonState[button])) down = true;
 
         // NOTE: Touches are considered like mouse buttons
-        if (CORE.Input.Touch.currentTouchState[button] == 1) down = true;
+        if (ANY_IS_PRESSED(CORE.Input.Touch.currentTouchState[button])) down = true;
     }
 
     return down;
@@ -4146,10 +4155,10 @@ bool IsMouseButtonReleased(int button)
 
     if ((button >= 0) && (button <= MOUSE_BUTTON_BACK))
     {
-        if ((CORE.Input.Mouse.currentButtonState[button] == 0) && (CORE.Input.Mouse.previousButtonState[button] == 1)) released = true;
+        if (!ANY_IS_PRESSED(CORE.Input.Mouse.currentButtonState[button]) && ANY_IS_PRESSED(CORE.Input.Mouse.previousButtonState[button])) released = true;
 
         // Map touches to mouse buttons checking
-        if ((CORE.Input.Touch.currentTouchState[button] == 0) && (CORE.Input.Touch.previousTouchState[button] == 1)) released = true;
+        if (!ANY_IS_PRESSED(CORE.Input.Touch.currentTouchState[button]) && ANY_IS_PRESSED(CORE.Input.Touch.previousTouchState[button])) released = true;
     }
 
     return released;
@@ -4162,10 +4171,10 @@ bool IsMouseButtonUp(int button)
 
     if ((button >= 0) && (button <= MOUSE_BUTTON_BACK))
     {
-        if (CORE.Input.Mouse.currentButtonState[button] == 0) up = true;
+        if (!ANY_IS_PRESSED(CORE.Input.Mouse.currentButtonState[button])) up = true;
 
         // NOTE: Touches are considered like mouse buttons
-        if (CORE.Input.Touch.currentTouchState[button] == 0) up = true;
+        if (!ANY_IS_PRESSED(CORE.Input.Touch.currentTouchState[button])) up = true;
     }
 
     return up;
@@ -4417,7 +4426,7 @@ static void RecordAutomationEvents(void)
     for (int key = 0; key < MAX_KEYBOARD_KEYS; key++)
     {
         // Event type: INPUT_KEY_UP (only saved once)
-        if (CORE.Input.Keyboard.previousKeyState[key] && !CORE.Input.Keyboard.currentKeyState[key])
+        if (ANY_IS_PRESSED(CORE.Input.Keyboard.previousKeyState[key]) && !ANY_IS_PRESSED(CORE.Input.Keyboard.currentKeyState[key]))
         {
             currentEventList.events[currentEventList.count].frame = automationEventFrame;
             currentEventList.events[currentEventList.count].type = INPUT_KEY_UP;
@@ -4433,9 +4442,9 @@ static void RecordAutomationEvents(void)
 
         // Event type: INPUT_KEY_DOWN
 #if AUTOMATION_EVENTS_V2
-        if (!CORE.Input.Keyboard.previousKeyState[key] && CORE.Input.Keyboard.currentKeyState[key])
+        if (!ANY_IS_PRESSED(CORE.Input.Keyboard.previousKeyState[key]) && ANY_IS_PRESSED(CORE.Input.Keyboard.currentKeyState[key]))
 #else
-        if (CORE.Input.Keyboard.currentKeyState[key])
+        if (ANY_IS_PRESSED(CORE.Input.Keyboard.currentKeyState[key]))
 #endif
         {
             currentEventList.events[currentEventList.count].frame = automationEventFrame;
@@ -4457,7 +4466,7 @@ static void RecordAutomationEvents(void)
     for (int button = 0; button < MAX_MOUSE_BUTTONS; button++)
     {
         // Event type: INPUT_MOUSE_BUTTON_UP
-        if (CORE.Input.Mouse.previousButtonState[button] && !CORE.Input.Mouse.currentButtonState[button])
+        if (ANY_IS_PRESSED(CORE.Input.Mouse.previousButtonState[button]) && !ANY_IS_PRESSED(CORE.Input.Mouse.currentButtonState[button]))
         {
             currentEventList.events[currentEventList.count].frame = automationEventFrame;
             currentEventList.events[currentEventList.count].type = INPUT_MOUSE_BUTTON_UP;
@@ -4473,9 +4482,9 @@ static void RecordAutomationEvents(void)
 
         // Event type: INPUT_MOUSE_BUTTON_DOWN
 #if AUTOMATION_EVENTS_V2
-        if (!CORE.Input.Mouse.previousButtonState[button] && CORE.Input.Mouse.currentButtonState[button])
+        if (!ANY_IS_PRESSED(CORE.Input.Mouse.previousButtonState[button]) && ANY_IS_PRESSED(CORE.Input.Mouse.currentButtonState[button]))
 #else
-        if (CORE.Input.Mouse.currentButtonState[button])
+        if (ANY_IS_PRESSED(CORE.Input.Mouse.currentButtonState[button]))
 #endif
         {
             currentEventList.events[currentEventList.count].frame = automationEventFrame;
@@ -4529,7 +4538,7 @@ static void RecordAutomationEvents(void)
     for (int id = 0; id < MAX_TOUCH_POINTS; id++)
     {
         // Event type: INPUT_TOUCH_UP
-        if (CORE.Input.Touch.previousTouchState[id] && !CORE.Input.Touch.currentTouchState[id])
+        if (ANY_IS_PRESSED(CORE.Input.Touch.previousTouchState[id]) && !ANY_IS_PRESSED(CORE.Input.Touch.currentTouchState[id]))
         {
             currentEventList.events[currentEventList.count].frame = automationEventFrame;
             currentEventList.events[currentEventList.count].type = INPUT_TOUCH_UP;
@@ -4545,9 +4554,9 @@ static void RecordAutomationEvents(void)
 
         // Event type: INPUT_TOUCH_DOWN
 #if AUTOMATION_EVENTS_V2
-        if (!CORE.Input.Touch.previousTouchState[id] && CORE.Input.Touch.currentTouchState[id])
+        if (!ANY_IS_PRESSED(CORE.Input.Touch.previousTouchState[id]) && ANY_IS_PRESSED(CORE.Input.Touch.currentTouchState[id]))
 #else
-        if (CORE.Input.Touch.currentTouchState[id])
+        if (ANY_IS_PRESSED(CORE.Input.Touch.currentTouchState[id]))
 #endif
         {
             currentEventList.events[currentEventList.count].frame = automationEventFrame;
@@ -4606,7 +4615,7 @@ static void RecordAutomationEvents(void)
         for (int button = 0; button < MAX_GAMEPAD_BUTTONS; button++)
         {
             // Event type: INPUT_GAMEPAD_BUTTON_UP
-            if (CORE.Input.Gamepad.previousButtonState[gamepad][button] && !CORE.Input.Gamepad.currentButtonState[gamepad][button])
+            if (ANY_IS_PRESSED(CORE.Input.Gamepad.previousButtonState[gamepad][button]) && !ANY_IS_PRESSED(CORE.Input.Gamepad.currentButtonState[gamepad][button]))
             {
                 currentEventList.events[currentEventList.count].frame = automationEventFrame;
                 currentEventList.events[currentEventList.count].type = INPUT_GAMEPAD_BUTTON_UP;
@@ -4622,9 +4631,9 @@ static void RecordAutomationEvents(void)
 
             // Event type: INPUT_GAMEPAD_BUTTON_DOWN
 #if AUTOMATION_EVENTS_V2
-            if (!CORE.Input.Gamepad.previousButtonState[gamepad][button] && CORE.Input.Gamepad.currentButtonState[gamepad][button])
+            if (!ANY_IS_PRESSED(CORE.Input.Gamepad.previousButtonState[gamepad][button]) && ANY_IS_PRESSED(CORE.Input.Gamepad.currentButtonState[gamepad][button]))
 #else
-            if (CORE.Input.Gamepad.currentButtonState[gamepad][button])
+            if (ANY_IS_PRESSED(CORE.Input.Gamepad.currentButtonState[gamepad][button]))
 #endif
             {
                 currentEventList.events[currentEventList.count].frame = automationEventFrame;
@@ -4725,5 +4734,3 @@ const char *TextFormat(const char *text, ...)
 }
 
 #endif // !SUPPORT_MODULE_RTEXT
-
-#include "rdebug.c.incl"
