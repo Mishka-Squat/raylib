@@ -3764,7 +3764,7 @@ void StopAutomationEventRecording(void)
 #endif
 }
 
-// Stop recording automation events
+// Play automation event list
 void PlayAutomationEventList(AutomationEventList list)
 {
 #if SUPPORT_AUTOMATION_EVENTS
@@ -3774,6 +3774,52 @@ void PlayAutomationEventList(AutomationEventList list)
     currentPlayingEventIndex = 0;
     automationEventPlaying = true;
 #endif
+}
+
+// Stop playing automation event list
+void StopAutomationEventList()
+{
+    automationEventPlaying = true;
+
+    // Keyboard input events reset
+    //-------------------------------------------------------------------------------------
+    for (int key = 0; key < MAX_KEYBOARD_KEYS; key++)
+    {
+        AUTOMATION_RELEASE_KEY(CORE.Input.Keyboard.previousKeyState[key]);
+        AUTOMATION_RELEASE_KEY(CORE.Input.Keyboard.currentKeyState[key]);
+    }
+    //-------------------------------------------------------------------------------------
+
+    // Mouse input events resets
+    //-------------------------------------------------------------------------------------
+    for (int button = 0; button < MAX_MOUSE_BUTTONS; button++)
+    {
+        AUTOMATION_RELEASE_KEY(CORE.Input.Mouse.previousButtonState[button]);
+        AUTOMATION_RELEASE_KEY(CORE.Input.Mouse.currentButtonState[button]);
+    }
+    //-------------------------------------------------------------------------------------
+
+    // Touch input reset
+    //-------------------------------------------------------------------------------------
+    for (int id = 0; id < MAX_TOUCH_POINTS; id++)
+    {
+        AUTOMATION_RELEASE_KEY(CORE.Input.Touch.previousTouchState[id]);
+        AUTOMATION_RELEASE_KEY(CORE.Input.Touch.currentTouchState[id]);
+    }
+    //-------------------------------------------------------------------------------------
+
+    // Gamepad input currentEventList.events recording
+    //-------------------------------------------------------------------------------------
+    for (int gamepad = 0; gamepad < MAX_GAMEPADS; gamepad++)
+    {
+        AUTOMATION_RELEASE_KEY(CORE.Input.Gamepad.ready[gamepad]);
+        for (int button = 0; button < MAX_GAMEPAD_BUTTONS; button++)
+        {
+            AUTOMATION_RELEASE_KEY(CORE.Input.Gamepad.previousButtonState[gamepad][button]);
+            AUTOMATION_RELEASE_KEY(CORE.Input.Gamepad.currentButtonState[gamepad][button]);
+        }
+    }
+    //-------------------------------------------------------------------------------------
 }
 
 // Play a recorded automation event
@@ -3787,11 +3833,11 @@ void PlayAutomationEvent(AutomationEvent event)
         switch (event.type)
         {
             // Input event
-        case INPUT_KEY_UP: INPUT_RELEASE_KEY(CORE.Input.Keyboard.currentKeyState[event.params[0]]); break;      // param[0]: key
-            case INPUT_KEY_DOWN: {                                                                              // param[0]: key
-                INPUT_PRESS_KEY(CORE.Input.Keyboard.currentKeyState[event.params[0]]);
+            case INPUT_KEY_UP: AUTOMATION_RELEASE_KEY(CORE.Input.Keyboard.currentKeyState[event.params[0]]); break;      // param[0]: key
+            case INPUT_KEY_DOWN: {                                                                                       // param[0]: key
+                AUTOMATION_PRESS_KEY(CORE.Input.Keyboard.currentKeyState[event.params[0]]);
 
-                if (INPUT_IS_PRESSED(CORE.Input.Keyboard.previousKeyState[event.params[0]]) == false)
+                if (AUTOMATION_PRESS_KEY(CORE.Input.Keyboard.previousKeyState[event.params[0]]) == false)
                 {
                     if (CORE.Input.Keyboard.keyPressedQueueCount < MAX_KEY_PRESSED_QUEUE)
                     {
@@ -3801,29 +3847,28 @@ void PlayAutomationEvent(AutomationEvent event)
                     }
                 }
             } break;
-            case INPUT_MOUSE_BUTTON_UP: INPUT_RELEASE_KEY(CORE.Input.Mouse.currentButtonState[event.params[0]]); break;     // param[0]: key
-            case INPUT_MOUSE_BUTTON_DOWN: INPUT_PRESS_KEY(CORE.Input.Mouse.currentButtonState[event.params[0]]); break;     // param[0]: key
+            case INPUT_MOUSE_BUTTON_UP: AUTOMATION_RELEASE_KEY(CORE.Input.Mouse.currentButtonState[event.params[0]]); break;     // param[0]: key
+            case INPUT_MOUSE_BUTTON_DOWN: AUTOMATION_PRESS_KEY(CORE.Input.Mouse.currentButtonState[event.params[0]]); break;     // param[0]: key
             case INPUT_MOUSE_POSITION:      // param[0]: x, param[1]: y
             {
-                CORE.Input.Mouse.currentPosition.x = (float)event.params[0];
-                CORE.Input.Mouse.currentPosition.y = (float)event.params[1];
+                SetMousePosition(event.params[0], event.params[1]);
             } break;
             case INPUT_MOUSE_WHEEL_MOTION:  // param[0]: x delta, param[1]: y delta
             {
                 CORE.Input.Mouse.currentWheelMove.x = (float)event.params[0];
                 CORE.Input.Mouse.currentWheelMove.y = (float)event.params[1];
             } break;
-            case INPUT_TOUCH_UP: INPUT_RELEASE_KEY(CORE.Input.Touch.currentTouchState[event.params[0]]); break;     // param[0]: id
-            case INPUT_TOUCH_DOWN: INPUT_PRESS_KEY(CORE.Input.Touch.currentTouchState[event.params[0]]); break;     // param[0]: id
+            case INPUT_TOUCH_UP: AUTOMATION_RELEASE_KEY(CORE.Input.Touch.currentTouchState[event.params[0]]); break;     // param[0]: id
+            case INPUT_TOUCH_DOWN: AUTOMATION_PRESS_KEY(CORE.Input.Touch.currentTouchState[event.params[0]]); break;     // param[0]: id
             case INPUT_TOUCH_POSITION:      // param[0]: id, param[1]: x, param[2]: y
             {
                 CORE.Input.Touch.position[event.params[0]].x = (float)event.params[1];
                 CORE.Input.Touch.position[event.params[0]].y = (float)event.params[2];
             } break;
-            case INPUT_GAMEPAD_CONNECT: INPUT_PRESS_KEY(CORE.Input.Gamepad.ready[event.params[0]]); break;                                     // param[0]: gamepad
-            case INPUT_GAMEPAD_DISCONNECT: INPUT_RELEASE_KEY(CORE.Input.Gamepad.ready[event.params[0]]); break;                                // param[0]: gamepad
-            case INPUT_GAMEPAD_BUTTON_UP: INPUT_RELEASE_KEY(CORE.Input.Gamepad.currentButtonState[event.params[0]][event.params[1]]); break;   // param[0]: gamepad, param[1]: button
-            case INPUT_GAMEPAD_BUTTON_DOWN: INPUT_PRESS_KEY(CORE.Input.Gamepad.currentButtonState[event.params[0]][event.params[1]]); break;   // param[0]: gamepad, param[1]: button
+            case INPUT_GAMEPAD_CONNECT: AUTOMATION_PRESS_KEY(CORE.Input.Gamepad.ready[event.params[0]]); break;                                     // param[0]: gamepad
+            case INPUT_GAMEPAD_DISCONNECT: AUTOMATION_RELEASE_KEY(CORE.Input.Gamepad.ready[event.params[0]]); break;                                // param[0]: gamepad
+            case INPUT_GAMEPAD_BUTTON_UP: AUTOMATION_RELEASE_KEY(CORE.Input.Gamepad.currentButtonState[event.params[0]][event.params[1]]); break;   // param[0]: gamepad, param[1]: button
+            case INPUT_GAMEPAD_BUTTON_DOWN: AUTOMATION_PRESS_KEY(CORE.Input.Gamepad.currentButtonState[event.params[0]][event.params[1]]); break;   // param[0]: gamepad, param[1]: button
             case INPUT_GAMEPAD_AXIS_MOTION: // param[0]: gamepad, param[1]: axis, param[2]: delta
             {
                 CORE.Input.Gamepad.axisState[event.params[0]][event.params[1]] = ((float)event.params[2]/32768.0f);
@@ -3848,7 +3893,7 @@ void PlayAutomationEvent(AutomationEvent event)
             default: break;
         }
 
-        TRACELOG(LOG_INFO, "AUTOMATION PLAY: Frame: %i | Event type: %i | Event parameters: %i, %i, %i", event.frame, event.type, event.params[0], event.params[1], event.params[2]);
+        TRACELOG(LOG_INFO, "AUTOMATION PLAY: Frame: %i | Event type: %s | Event parameters: %i, %i, %i", event.frame, autoEventTypeName[event.type], event.params[0], event.params[1], event.params[2]);
     }
 #endif
 }
@@ -4410,7 +4455,22 @@ static void ScanDirectoryFiles(const char *basePath, FilePathList *files, const 
 // Play frame events (from internal events array)
 static void PlayAutomationEvents(void)
 {
+    unsigned int automationEventFrame = GetAutomationEventFrame();
+    for (; currentPlayingEventIndex < currentEventList.count; currentPlayingEventIndex++) {
+        AutomationEvent *currentEvent = &currentEventList.events[currentPlayingEventIndex];
+        if (currentEvent->frame > automationEventFrame) {
+            break;
+        }
 
+        //TRACELOG(LOG_INFO, "AUTOMATION: Frame: %i | Event type: %s | Event parameters: %i, %i, %i",
+        //    currentEvent->frame, autoEventTypeName[currentEvent->type], currentEvent->params[0], currentEvent->params[1], currentEvent->params[2]);
+
+        PlayAutomationEvent(*currentEvent);
+    }
+
+    if (currentPlayingEventIndex == currentEventList.count) {
+        StopAutomationEventList();
+    }
 }
 
 // Automation event recording

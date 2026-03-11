@@ -1197,6 +1197,8 @@ RLAPI void SetAutomationEventBaseFrame(unsigned int frame);                     
 RLAPI unsigned int GetAutomationEventFrame(void);                                       // Get current automation event frame
 RLAPI void StartAutomationEventRecording(void);                                         // Start recording automation events (AutomationEventList must be set)
 RLAPI void StopAutomationEventRecording(void);                                          // Stop recording automation events
+RLAPI void PlayAutomationEventList(AutomationEventList list);                           // Play automation event list
+RLAPI void StopAutomationEventList();                                                   // Stop playing automation event list
 RLAPI void PlayAutomationEvent(AutomationEvent event);                                  // Play a recorded automation event
 
 //------------------------------------------------------------------------------------
