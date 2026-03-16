@@ -95,7 +95,7 @@ USE_EXTERNAL_GLFW     ?= FALSE
 GLFW_LINUX_ENABLE_WAYLAND  ?= FALSE
 GLFW_LINUX_ENABLE_X11      ?= TRUE
 
-# Enable support for X11 by default on Linux when using GLFW
+# Enable support for X11 by default on Linux when using RGFW
 # NOTE: Wayland is disabled by default, only enable if you are sure
 RGFW_LINUX_ENABLE_WAYLAND  ?= FALSE
 RGFW_LINUX_ENABLE_X11      ?= TRUE
@@ -152,15 +152,6 @@ ifeq ($(TARGET_PLATFORM),PLATFORM_DRM)
     UNAMEOS = $(shell uname)
     ifeq ($(UNAMEOS),Linux)
         PLATFORM_OS = LINUX
-    endif
-endif
-
-# RAYLIB_PATH adjustment for LINUX platform
-# TODO: Do we really need this?
-ifeq ($(TARGET_PLATFORM),PLATFORM_DESKTOP_GLFW)
-    ifeq ($(PLATFORM_OS),LINUX)
-        RAYLIB_PREFIX  ?= ..
-        RAYLIB_PATH     = $(realpath $(RAYLIB_PREFIX))
     endif
 endif
 
@@ -304,7 +295,7 @@ endif
 
 # Define library paths containing required libs: LDFLAGS
 #------------------------------------------------------------------------------------------------
-LDFLAGS = -L. -L$(RAYLIB_RELEASE_PATH) -L$(RAYLIB_PATH)/src
+LDFLAGS = -L. -L$(RAYLIB_RELEASE_PATH)
 
 ifeq ($(TARGET_PLATFORM),PLATFORM_DESKTOP_GLFW)
     ifeq ($(PLATFORM_OS),WINDOWS)
