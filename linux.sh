@@ -1,5 +1,12 @@
 #!/bin/sh
 
+mkdir build
+cd build
+cmake ..
+make
+
+cd ..
+
 cp ./build/raylib/external/glfw/src/xdg-shell-client-protocol.h ./src/external/glfw/src/
 cp ./build/raylib/external/glfw/src/xdg-shell-client-protocol-code.h ./src/external/glfw/src/
 cp ./build/raylib/external/glfw/src/xdg-decoration-unstable-v1-client-protocol.h ./src/external/glfw/src/

@@ -32,7 +32,7 @@
 static RenderTexture2D LoadRenderTextureDepthTex(int width, int height);
 
 // Unload render texture from GPU memory (VRAM)
-static void UnloadRenderTextureDepthTex(RenderTexture2D *target);
+static void UnloadRenderTextureDepthTex(RenderTexture2D target);
 
 //------------------------------------------------------------------------------------
 // Program main entry point
@@ -102,7 +102,7 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadRenderTextureDepthTex(&target);
+    UnloadRenderTextureDepthTex(target);
     UnloadShader(shader);
 
     CloseWindow();        // Close window and OpenGL context
@@ -154,16 +154,16 @@ static RenderTexture2D LoadRenderTextureDepthTex(int width, int height)
 }
 
 // Unload render texture from GPU memory (VRAM)
-void UnloadRenderTextureDepthTex(RenderTexture2D *target)
+void UnloadRenderTextureDepthTex(RenderTexture2D target)
 {
-    if (target->id > 0)
+    if (target.id > 0)
     {
         // Color texture attached to FBO is deleted
-        rlUnloadTexture(target->texture.id);
-        rlUnloadTexture(target->depth.id);
+        rlUnloadTexture(target.texture.id);
+        rlUnloadTexture(target.depth.id);
 
         // NOTE: Depth texture is automatically
         // queried and deleted before deleting framebuffer
-        rlUnloadFramebuffer(target->id);
+        rlUnloadFramebuffer(target.id);
     }
 }

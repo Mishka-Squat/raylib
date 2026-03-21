@@ -105,7 +105,7 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadModelAnimations(&anims, animCount);   // Unload model animations data
+    UnloadModelAnimations(anims, animCount);   // Unload model animations data
     UnloadModel(model);                        // Unload model
 
     CloseWindow();              // Close window and OpenGL context

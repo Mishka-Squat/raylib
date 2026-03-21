@@ -109,7 +109,7 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadModelAnimations(&anims, animCount); // Unload model animation
+    UnloadModelAnimations(anims, animCount); // Unload model animation
     UnloadModel(model);             // Unload model and meshes/material
     UnloadShader(skinningShader);   // Unload GPU skinning shader
 

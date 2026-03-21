@@ -98,8 +98,8 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadSound(&sound);     // Unload sound from VRAM
-    UnloadTexture(&texture); // Unload texture from VRAM
+    UnloadSound(sound);     // Unload sound from VRAM
+    UnloadTexture(texture); // Unload texture from VRAM
 
     CloseAudioDevice();     // Close audio device
 
