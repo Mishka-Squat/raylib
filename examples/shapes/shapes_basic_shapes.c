@@ -57,7 +57,7 @@ int main(void)
             DrawLine(screenWidth / 5, 120, screenWidth / 5 + 35, 120, BLACK);
 
             DrawCircleLines(screenWidth / 5, 220, 60, DARKGREEN);
-            DrawCircleGradient(screenWidth/5, 220, 60, GREEN, SKYBLUE);
+            DrawCircleGradient((Vector2){ screenWidth/5.0f, 220.0f }, 60, GREEN, SKYBLUE);
 
             DrawLine(screenWidth / 5, 220, screenWidth / 5, 220 - 60, BLACK);
             DrawLine(screenWidth / 5, 220, screenWidth / 5 - 60, 220, BLACK);

@@ -109,7 +109,7 @@ int main(void)
                     }
                 }
             }
-            
+
             // Remove the closest voxel if one was hit
             if (voxelFound)
             {

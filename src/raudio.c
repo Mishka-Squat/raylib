@@ -11,22 +11,22 @@
 *       - Play/Stop/Pause/Resume loaded audio
 *
 *   CONFIGURATION:
-*       #define SUPPORT_MODULE_RAUDIO
+*       #define SUPPORT_MODULE_RAUDIO       1
 *           raudio module is included in the build
 *
 *       #define RAUDIO_STANDALONE
 *           Define to use the module as standalone library (independently of raylib)
 *           Required types and functions are defined in the same module
 *
-*       #define SUPPORT_FILEFORMAT_WAV
-*       #define SUPPORT_FILEFORMAT_OGG
-*       #define SUPPORT_FILEFORMAT_MP3
-*       #define SUPPORT_FILEFORMAT_QOA
-*       #define SUPPORT_FILEFORMAT_FLAC
-*       #define SUPPORT_FILEFORMAT_XM
-*       #define SUPPORT_FILEFORMAT_MOD
+*       #define SUPPORT_FILEFORMAT_WAV      1
+*       #define SUPPORT_FILEFORMAT_OGG      1
+*       #define SUPPORT_FILEFORMAT_MP3      1
+*       #define SUPPORT_FILEFORMAT_QOA      1
+*       #define SUPPORT_FILEFORMAT_FLAC     0
+*       #define SUPPORT_FILEFORMAT_XM       1
+*       #define SUPPORT_FILEFORMAT_MOD      1
 *           Selected desired fileformats to be supported for loading. Some of those formats are
-*           supported by default, to remove support, comment unrequired #define in this module
+*           supported by default, to remove support, #define as 0 in this module or your build system
 *
 *   DEPENDENCIES:
 *       miniaudio.h  - Audio device management lib (https://github.com/mackron/miniaudio)
@@ -381,7 +381,7 @@ struct rAudioProcessor {
     rAudioProcessor *prev;          // Previous audio processor on the list
 };
 
-#define AudioBuffer rAudioBuffer    // HACK: To avoid CoreAudio (macOS) symbol collision
+#define AudioBuffer rAudioBuffer    // WARNING: Renamed to avoid symbol collision with CoreAudio (macOS) AudioBuffer type
 
 // Audio data context
 typedef struct AudioData {
@@ -437,6 +437,7 @@ static const char *GetFileName(const char *filePath);               // Get point
 static const char *GetFileNameWithoutExt(const char *filePath);     // Get filename string without extension (uses static string)
 
 static unsigned char *LoadFileData(const char *fileName, int *dataSize);    // Load file data as byte array (read)
+static void UnloadFileData(unsigned char *data);                     // Unload file data allocated by LoadFileData()
 static bool SaveFileData(const char *fileName, void *data, int dataSize);   // Save data to file from byte array (write)
 static bool SaveFileText(const char *fileName, char *text);         // Save text data to file (write), string must be '\0' terminated
 #endif
@@ -917,7 +918,7 @@ Wave LoadWaveFromMemory(const char *fileType, const unsigned char *fileData, int
     return wave;
 }
 
-// Checks if wave data is valid (data loaded and parameters)
+// Check if wave data is valid (data loaded and parameters)
 bool IsWaveValid(Wave wave)
 {
     bool result = false;
@@ -968,26 +969,24 @@ Sound LoadSoundFromWave(Wave wave)
         if (frameCount == 0) TRACELOG(LOG_WARNING, "SOUND: Failed to get frame count for format conversion");
 
         AudioBuffer *audioBuffer = LoadAudioBuffer(AUDIO_DEVICE_FORMAT, AUDIO_DEVICE_CHANNELS, AUDIO.System.device.sampleRate, frameCount, AUDIO_BUFFER_USAGE_STATIC);
-        if (audioBuffer == NULL)
+        if (audioBuffer != NULL)
         {
-            TRACELOG(LOG_WARNING, "SOUND: Failed to create buffer");
-            return sound; // early return to avoid dereferencing the audioBuffer null pointer
+            frameCount = (ma_uint32)ma_convert_frames(audioBuffer->data, frameCount, AUDIO_DEVICE_FORMAT, AUDIO_DEVICE_CHANNELS, AUDIO.System.device.sampleRate, wave.data, frameCountIn, formatIn, wave.channels, wave.sampleRate);
+            if (frameCount == 0) TRACELOG(LOG_WARNING, "SOUND: Failed format conversion");
+
+            sound.frameCount = frameCount;
+            sound.stream.sampleRate = AUDIO.System.device.sampleRate;
+            sound.stream.sampleSize = 32;
+            sound.stream.channels = AUDIO_DEVICE_CHANNELS;
+            sound.stream.buffer = audioBuffer;
         }
-
-        frameCount = (ma_uint32)ma_convert_frames(audioBuffer->data, frameCount, AUDIO_DEVICE_FORMAT, AUDIO_DEVICE_CHANNELS, AUDIO.System.device.sampleRate, wave.data, frameCountIn, formatIn, wave.channels, wave.sampleRate);
-        if (frameCount == 0) TRACELOG(LOG_WARNING, "SOUND: Failed format conversion");
-
-        sound.frameCount = frameCount;
-        sound.stream.sampleRate = AUDIO.System.device.sampleRate;
-        sound.stream.sampleSize = 32;
-        sound.stream.channels = AUDIO_DEVICE_CHANNELS;
-        sound.stream.buffer = audioBuffer;
+        else TRACELOG(LOG_WARNING, "SOUND: Failed to create buffer");
     }
 
     return sound;
 }
 
-// Clone sound from existing sound data, clone does not own wave data
+// Load sound alias, clone sound from existing sound data, clone does not own wave data
 // NOTE: Wave data must be unallocated manually and will be shared across all clones
 Sound LoadSoundAlias(Sound source)
 {
@@ -997,31 +996,29 @@ Sound LoadSoundAlias(Sound source)
     {
         AudioBuffer *audioBuffer = LoadAudioBuffer(AUDIO_DEVICE_FORMAT, AUDIO_DEVICE_CHANNELS, AUDIO.System.device.sampleRate, 0, AUDIO_BUFFER_USAGE_STATIC);
 
-        if (audioBuffer == NULL)
+        if (audioBuffer != NULL)
         {
-            TRACELOG(LOG_WARNING, "SOUND: Failed to create buffer");
-            return sound; // Early return to avoid dereferencing the audioBuffer null pointer
+            audioBuffer->sizeInFrames = source.stream.buffer->sizeInFrames;
+            audioBuffer->data = source.stream.buffer->data;
+
+            // Initalize the buffer as if it was new
+            audioBuffer->volume = 1.0f;
+            audioBuffer->pitch = 1.0f;
+            audioBuffer->pan = 0.0f; // Center
+
+            sound.frameCount = source.frameCount;
+            sound.stream.sampleRate = AUDIO.System.device.sampleRate;
+            sound.stream.sampleSize = 32;
+            sound.stream.channels = AUDIO_DEVICE_CHANNELS;
+            sound.stream.buffer = audioBuffer;
         }
-
-        audioBuffer->sizeInFrames = source.stream.buffer->sizeInFrames;
-        audioBuffer->data = source.stream.buffer->data;
-
-        // Initalize the buffer as if it was new
-        audioBuffer->volume = 1.0f;
-        audioBuffer->pitch = 1.0f;
-        audioBuffer->pan = 0.0f; // Center
-
-        sound.frameCount = source.frameCount;
-        sound.stream.sampleRate = AUDIO.System.device.sampleRate;
-        sound.stream.sampleSize = 32;
-        sound.stream.channels = AUDIO_DEVICE_CHANNELS;
-        sound.stream.buffer = audioBuffer;
+        else TRACELOG(LOG_WARNING, "SOUND: Failed to create buffer");
     }
 
     return sound;
 }
 
-// Checks if a sound is valid (data loaded and buffers initialized)
+// Check if a sound is valid (data loaded and buffers initialized)
 bool IsSoundValid(Sound sound)
 {
     bool result = false;
@@ -1080,7 +1077,7 @@ void UpdateSound(Sound sound, const void *data, int frameCount)
 // Export wave data to file
 bool ExportWave(Wave wave, const char *fileName)
 {
-    bool success = false;
+    bool result = false;
 
     if (false) { }
 #if SUPPORT_FILEFORMAT_WAV
@@ -1097,11 +1094,11 @@ bool ExportWave(Wave wave, const char *fileName)
 
         void *fileData = NULL;
         size_t fileDataSize = 0;
-        success = drwav_init_memory_write(&wav, &fileData, &fileDataSize, &format, NULL);
-        if (success) success = (int)drwav_write_pcm_frames(&wav, wave.frameCount, wave.data);
+        result = drwav_init_memory_write(&wav, &fileData, &fileDataSize, &format, NULL);
+        if (result) result = (int)drwav_write_pcm_frames(&wav, wave.frameCount, wave.data);
         drwav_result result = drwav_uninit(&wav);
 
-        if (result == DRWAV_SUCCESS) success = SaveFileData(fileName, (unsigned char *)fileData, (unsigned int)fileDataSize);
+        if (result == DRWAV_SUCCESS) result = SaveFileData(fileName, (unsigned char *)fileData, (unsigned int)fileDataSize);
 
         drwav_free(fileData, NULL);
     }
@@ -1117,7 +1114,7 @@ bool ExportWave(Wave wave, const char *fileName)
             qoa.samples = wave.frameCount;
 
             int bytesWritten = qoa_write(fileName, (const short *)wave.data, &qoa);
-            if (bytesWritten > 0) success = true;
+            if (bytesWritten > 0) result = true;
         }
         else TRACELOG(LOG_WARNING, "AUDIO: Wave data must be 16 bit per sample for QOA format export");
     }
@@ -1126,19 +1123,19 @@ bool ExportWave(Wave wave, const char *fileName)
     {
         // Export raw sample data (without header)
         // NOTE: It's up to the user to track wave parameters
-        success = SaveFileData(fileName, wave.data, wave.frameCount*wave.channels*wave.sampleSize/8);
+        result = SaveFileData(fileName, wave.data, wave.frameCount*wave.channels*wave.sampleSize/8);
     }
 
-    if (success) TRACELOG(LOG_INFO, "FILEIO: [%s] Wave data exported successfully", fileName);
+    if (result) TRACELOG(LOG_INFO, "FILEIO: [%s] Wave data exported successfully", fileName);
     else TRACELOG(LOG_WARNING, "FILEIO: [%s] Failed to export wave data", fileName);
 
-    return success;
+    return result;
 }
 
 // Export wave sample data to code (.h)
 bool ExportWaveAsCode(Wave wave, const char *fileName)
 {
-    bool success = false;
+    bool result = false;
 
 #ifndef TEXT_BYTES_PER_LINE
     #define TEXT_BYTES_PER_LINE     20
@@ -1192,14 +1189,14 @@ bool ExportWaveAsCode(Wave wave, const char *fileName)
     }
 
     // NOTE: Text data length exported is determined by '\0' (NULL) character
-    success = SaveFileText(fileName, txtData);
+    result = SaveFileText(fileName, txtData);
 
     RL_FREE(txtData);
 
-    if (success != 0) TRACELOG(LOG_INFO, "FILEIO: [%s] Wave as code exported successfully", fileName);
+    if (result != 0) TRACELOG(LOG_INFO, "FILEIO: [%s] Wave as code exported successfully", fileName);
     else TRACELOG(LOG_WARNING, "FILEIO: [%s] Failed to export wave as code", fileName);
 
-    return success;
+    return result;
 }
 
 // Play a sound
@@ -1715,8 +1712,7 @@ Music LoadMusicStreamFromMemory(const char *fileType, const unsigned char *data,
 
         // Copy data to allocated memory for default UnloadMusicStream
         unsigned char *newData = (unsigned char *)RL_MALLOC(dataSize);
-        int it = dataSize/sizeof(unsigned char);
-        for (int i = 0; i < it; i++) newData[i] = data[i];
+        for (int i = 0; i < dataSize; i++) newData[i] = data[i];
 
         // Memory loaded version for jar_mod_load_file()
         if (dataSize && (dataSize < 32*1024*1024))
@@ -1763,7 +1759,7 @@ Music LoadMusicStreamFromMemory(const char *fileType, const unsigned char *data,
     return music;
 }
 
-// Checks if a music stream is valid (context and buffers initialized)
+// Check if a music stream is valid (context and buffers initialized)
 bool IsMusicValid(Music music)
 {
     return ((music.ctxData != NULL) &&          // Validate context loaded
@@ -1776,6 +1772,8 @@ bool IsMusicValid(Music music)
 // Unload music stream
 Music UnloadMusicStream(Music music)
 {
+    if (IsMusicStreamPlaying(music)) StopMusicStream(music);
+
     music.stream = UnloadAudioStream(music.stream);
 
     if (music.ctxData != NULL)
@@ -2081,7 +2079,7 @@ void SetMusicPitch(Music music, float pitch)
     SetAudioBufferPitch(music.stream.buffer, pitch);
 }
 
-// Set pan for a music
+// Set pan for music
 void SetMusicPan(Music music, float pan)
 {
     SetAudioBufferPan(music.stream.buffer, pan);
@@ -2169,7 +2167,7 @@ AudioStream LoadAudioStream(unsigned int sampleRate, unsigned int sampleSize, un
     return stream;
 }
 
-// Checks if an audio stream is valid (buffers initialized)
+// Check if an audio stream is valid (buffers initialized)
 bool IsAudioStreamValid(AudioStream stream)
 {
     return ((stream.buffer != NULL) &&    // Validate stream buffer
@@ -2200,12 +2198,15 @@ void UpdateAudioStream(AudioStream stream, const void *data, int frameCount)
 // Check if any audio stream buffers requires refill
 bool IsAudioStreamProcessed(AudioStream stream)
 {
-    if (stream.buffer == NULL) return false;
-
     bool result = false;
-    ma_mutex_lock(&AUDIO.System.lock);
-    result = stream.buffer->isSubBufferProcessed[0] || stream.buffer->isSubBufferProcessed[1];
-    ma_mutex_unlock(&AUDIO.System.lock);
+
+    if (stream.buffer != NULL)
+    {
+        ma_mutex_lock(&AUDIO.System.lock);
+        result = stream.buffer->isSubBufferProcessed[0] || stream.buffer->isSubBufferProcessed[1];
+        ma_mutex_unlock(&AUDIO.System.lock);
+    }
+
     return result;
 }
 
@@ -2895,9 +2896,17 @@ static unsigned char *LoadFileData(const char *fileName, int *dataSize)
     return data;
 }
 
+// Unload file data allocated by LoadFileData()
+static void UnloadFileData(unsigned char *data)
+{
+    RL_FREE(data);
+}
+
 // Save data to file from buffer
 static bool SaveFileData(const char *fileName, void *data, int dataSize)
 {
+    bool result = true;
+
     if (fileName != NULL)
     {
         FILE *file = fopen(fileName, "wb");
@@ -2915,21 +2924,23 @@ static bool SaveFileData(const char *fileName, void *data, int dataSize)
         else
         {
             TRACELOG(LOG_WARNING, "FILEIO: [%s] Failed to open file", fileName);
-            return false;
+            result = false;
         }
     }
     else
     {
         TRACELOG(LOG_WARNING, "FILEIO: File name provided is not valid");
-        return false;
+        result = false;
     }
 
-    return true;
+    return result;
 }
 
 // Save text data to file (write), string must be '\0' terminated
 static bool SaveFileText(const char *fileName, char *text)
 {
+    bool result = true;
+
     if (fileName != NULL)
     {
         FILE *file = fopen(fileName, "wt");
@@ -2947,16 +2958,16 @@ static bool SaveFileText(const char *fileName, char *text)
         else
         {
             TRACELOG(LOG_WARNING, "FILEIO: [%s] Failed to open text file", fileName);
-            return false;
+            result = false;
         }
     }
     else
     {
         TRACELOG(LOG_WARNING, "FILEIO: File name provided is not valid");
-        return false;
+        result = false;
     }
 
-    return true;
+    return result;
 }
 #endif
 

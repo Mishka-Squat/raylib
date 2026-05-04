@@ -59,10 +59,13 @@
 // NOTE: Below types are required for standalone usage
 //----------------------------------------------------------------------------------
 // Boolean type
+#if !defined(__cplusplus)
 #if (defined(__STDC__) && __STDC_VERSION__ >= 199901L) || (defined(_MSC_VER) && _MSC_VER >= 1800)
     #include <stdbool.h>
-#elif !defined(__cplusplus) && !defined(bool) && !defined(RL_BOOL_TYPE)
+#elif !defined(bool)
     typedef enum bool { false = 0, true = !false } bool;
+    #define RL_BOOL_TYPE
+#endif
 #endif
 
 #if !defined(RL_VECTOR2_TYPE)
@@ -124,7 +127,7 @@ void UpdateGestures(void);                              // Update gestures detec
 
 #if defined(RGESTURES_STANDALONE)
 void SetGesturesEnabled(unsigned int flags);            // Enable a set of gestures using flags
-bool IsGestureDetected(int gesture);                    // Check if a gesture have been detected
+bool IsGestureDetected(int gesture);                    // Check if a gesture has been detected
 int GetGestureDetected(void);                           // Get latest detected gesture
 
 float GetGestureHoldDuration(void);                     // Get gesture hold time in seconds
@@ -312,7 +315,7 @@ void ProcessGestureEvent(GestureEvent event)
         }
         else if (event.touchAction == TOUCH_ACTION_UP)
         {
-            // A swipe can happen while the current gesture is drag, but (specially for web) also hold, so set upPosition for both cases
+            // A swipe can happen while the current gesture is drag, but (especially for web) also hold, so set upPosition for both cases
             if (GESTURES.current == GESTURE_DRAG || GESTURES.current == GESTURE_HOLD) GESTURES.Touch.upPosition = event.position[0];
 
 			// NOTE(iga): Did I changed Drag to Swipe for some reason? Need explanation of that difference.
