@@ -421,7 +421,7 @@ RLAPI void ImageRotateCCW(Image *image);                                        
 RLAPI void ImageColorTint(Image *image, Color color);                                                    // Modify image color: tint
 RLAPI void ImageColorInvert(Image *image);                                                               // Modify image color: invert
 RLAPI void ImageColorGrayscale(Image *image);                                                            // Modify image color: grayscale
-RLAPI void ImageColorContrast(Image *image, float contrast);                                             // Modify image color: contrast (-100 to 100)
+RLAPI void ImageColorContrast(Image *image, int contrast);                                               // Modify image color: contrast (-100 to 100)
 RLAPI void ImageColorBrightness(Image *image, int brightness);                                           // Modify image color: brightness (-255 to 255)
 RLAPI void ImageColorReplace(Image *image, Color color, Color replace);                                  // Modify image color: replace color
 RLAPI Color *LoadImageColors(Image image);                                                               // Load color data from image as a Color array (RGBA - 32bit)
@@ -448,7 +448,6 @@ RLAPI void ImageDrawRectangleV(Image *dst, Vector2 position, Vector2 size, Color
 RLAPI void ImageDrawRectangleRec(Image *dst, Rectangle rec, Color color);                                // Draw rectangle within an image
 RLAPI void ImageDrawRectangleLines(Image *dst, Rectangle rec, int thick, Color color);                   // Draw rectangle lines within an image
 RLAPI void ImageDrawTriangle(Image *dst, Vector2 v1, Vector2 v2, Vector2 v3, Color color);               // Draw triangle within an image
-RLAPI void ImageDrawTriangleEx(Image *dst, Vector2 v1, Vector2 v2, Vector2 v3, Color c1, Color c2, Color c3); // Draw triangle with interpolated colors within an image
 RLAPI void ImageDrawTriangleLines(Image *dst, Vector2 v1, Vector2 v2, Vector2 v3, Color color);          // Draw triangle outline within an image
 RLAPI void ImageDrawTriangleFan(Image *dst, const Vector2 *points, int pointCount, Color color);         // Draw a triangle fan defined by points within an image (first vertex is the center)
 RLAPI void ImageDrawTriangleStrip(Image *dst, const Vector2 *points, int pointCount, Color color);       // Draw a triangle strip defined by points within an image
