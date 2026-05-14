@@ -597,6 +597,12 @@ Vector2 GetWindowScaleDPI(void)
     return (Vector2){ scale, scale };
 }
 
+// Get display scale DPI factor for current monitor
+Vector2 GetDisplayScaleDPI(void)
+{
+    return GetWindowScaleDPI();
+}
+
 // Set clipboard text content
 void SetClipboardText(const char *text)
 {

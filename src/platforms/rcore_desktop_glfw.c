@@ -1037,7 +1037,6 @@ Vector2 GetDisplayScaleDPI(void)
     return scale;
 }
 
-
 // Set clipboard text content
 void SetClipboardText(const char *text)
 {
