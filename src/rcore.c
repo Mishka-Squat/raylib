@@ -3859,7 +3859,7 @@ void PlayAutomationEvent(AutomationEvent event)
             case INPUT_KEY_DOWN: {                                                                                       // param[0]: key
                 AUTOMATION_PRESS_KEY(CORE.Input.Keyboard.currentKeyState[event.params[0]]);
 
-                if (AUTOMATION_PRESS_KEY(CORE.Input.Keyboard.previousKeyState[event.params[0]]) == false)
+                if (AUTOMATION_IS_PRESSED(CORE.Input.Keyboard.previousKeyState[event.params[0]]) == false)
                 {
                     if (CORE.Input.Keyboard.keyPressedQueueCount < MAX_KEY_PRESSED_QUEUE)
                     {

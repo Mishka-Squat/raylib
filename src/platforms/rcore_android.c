@@ -766,7 +766,7 @@ void PollInputEvents(void)
 
     for (int i = 0; i < MAX_GAMEPADS; i++)
     {
-        if (CORE.Input.Gamepad.ready[i])     // Check if gamepad is available
+        if (INPUT_IS_PRESSED(CORE.Input.Gamepad.ready[i]))     // Check if gamepad is available
         {
             // Register previous gamepad states
             for (int k = 0; k < MAX_GAMEPAD_BUTTONS; k++)
@@ -1285,7 +1285,7 @@ static int32_t AndroidInputCallback(struct android_app *app, AInputEvent *event)
             FLAG_IS_SET(source, AINPUT_SOURCE_GAMEPAD))
         {
             // Assuming a single gamepad, "detected" on its input event
-            CORE.Input.Gamepad.ready[0] = true;
+            INPUT_PRESS_KEY(CORE.Input.Gamepad.ready[0]);
 
             CORE.Input.Gamepad.axisState[0][GAMEPAD_AXIS_LEFT_X] = AMotionEvent_getAxisValue(
                     event, AMOTION_EVENT_AXIS_X, 0);
@@ -1306,34 +1306,34 @@ static int32_t AndroidInputCallback(struct android_app *app, AInputEvent *event)
 
             if (dpadX == 1.0f)
             {
-                CORE.Input.Gamepad.currentButtonState[0][GAMEPAD_BUTTON_LEFT_FACE_RIGHT] = 1;
-                CORE.Input.Gamepad.currentButtonState[0][GAMEPAD_BUTTON_LEFT_FACE_LEFT] = 0;
+                INPUT_PRESS_KEY(CORE.Input.Gamepad.currentButtonState[0][GAMEPAD_BUTTON_LEFT_FACE_RIGHT]);
+                INPUT_RELEASE_KEY(CORE.Input.Gamepad.currentButtonState[0][GAMEPAD_BUTTON_LEFT_FACE_LEFT]);
             }
             else if (dpadX == -1.0f)
             {
-                CORE.Input.Gamepad.currentButtonState[0][GAMEPAD_BUTTON_LEFT_FACE_RIGHT] = 0;
-                CORE.Input.Gamepad.currentButtonState[0][GAMEPAD_BUTTON_LEFT_FACE_LEFT] = 1;
+                INPUT_RELEASE_KEY(CORE.Input.Gamepad.currentButtonState[0][GAMEPAD_BUTTON_LEFT_FACE_RIGHT]);
+                INPUT_PRESS_KEY(CORE.Input.Gamepad.currentButtonState[0][GAMEPAD_BUTTON_LEFT_FACE_LEFT]);
             }
             else
             {
-                CORE.Input.Gamepad.currentButtonState[0][GAMEPAD_BUTTON_LEFT_FACE_RIGHT] = 0;
-                CORE.Input.Gamepad.currentButtonState[0][GAMEPAD_BUTTON_LEFT_FACE_LEFT] = 0;
+                INPUT_RELEASE_KEY(CORE.Input.Gamepad.currentButtonState[0][GAMEPAD_BUTTON_LEFT_FACE_RIGHT]);
+                INPUT_RELEASE_KEY(CORE.Input.Gamepad.currentButtonState[0][GAMEPAD_BUTTON_LEFT_FACE_LEFT]);
             }
 
             if (dpadY == 1.0f)
             {
-                CORE.Input.Gamepad.currentButtonState[0][GAMEPAD_BUTTON_LEFT_FACE_DOWN] = 1;
-                CORE.Input.Gamepad.currentButtonState[0][GAMEPAD_BUTTON_LEFT_FACE_UP] = 0;
+                INPUT_PRESS_KEY(CORE.Input.Gamepad.currentButtonState[0][GAMEPAD_BUTTON_LEFT_FACE_DOWN]);
+                INPUT_RELEASE_KEY(CORE.Input.Gamepad.currentButtonState[0][GAMEPAD_BUTTON_LEFT_FACE_UP]);
             }
             else if (dpadY == -1.0f)
             {
-                CORE.Input.Gamepad.currentButtonState[0][GAMEPAD_BUTTON_LEFT_FACE_DOWN] = 0;
-                CORE.Input.Gamepad.currentButtonState[0][GAMEPAD_BUTTON_LEFT_FACE_UP] = 1;
+                INPUT_RELEASE_KEY(CORE.Input.Gamepad.currentButtonState[0][GAMEPAD_BUTTON_LEFT_FACE_DOWN]);
+                INPUT_PRESS_KEY(CORE.Input.Gamepad.currentButtonState[0][GAMEPAD_BUTTON_LEFT_FACE_UP]);
             }
             else
             {
-                CORE.Input.Gamepad.currentButtonState[0][GAMEPAD_BUTTON_LEFT_FACE_DOWN] = 0;
-                CORE.Input.Gamepad.currentButtonState[0][GAMEPAD_BUTTON_LEFT_FACE_UP] = 0;
+                INPUT_RELEASE_KEY(CORE.Input.Gamepad.currentButtonState[0][GAMEPAD_BUTTON_LEFT_FACE_DOWN]);
+                INPUT_RELEASE_KEY(CORE.Input.Gamepad.currentButtonState[0][GAMEPAD_BUTTON_LEFT_FACE_UP]);
             }
 
             return 1; // Handled gamepad axis motion
@@ -1352,7 +1352,7 @@ static int32_t AndroidInputCallback(struct android_app *app, AInputEvent *event)
             !FLAG_IS_SET(source, AINPUT_SOURCE_KEYBOARD))
         {
             // Assuming a single gamepad, "detected" on its input event
-            CORE.Input.Gamepad.ready[0] = true;
+            INPUT_PRESS_KEY(CORE.Input.Gamepad.ready[0]);
 
             GamepadButton button = AndroidTranslateGamepadButton(keycode);
 
@@ -1360,9 +1360,12 @@ static int32_t AndroidInputCallback(struct android_app *app, AInputEvent *event)
 
             if (AKeyEvent_getAction(event) == AKEY_EVENT_ACTION_DOWN)
             {
-                CORE.Input.Gamepad.currentButtonState[0][button] = 1;
+                INPUT_PRESS_KEY(CORE.Input.Gamepad.currentButtonState[0][button]);
             }
-            else CORE.Input.Gamepad.currentButtonState[0][button] = 0;  // Key up
+            else
+            {
+                INPUT_RELEASE_KEY(CORE.Input.Gamepad.currentButtonState[0][button]);  // Key up
+            }
 
             return 1; // Handled gamepad button
         }
@@ -1374,13 +1377,19 @@ static int32_t AndroidInputCallback(struct android_app *app, AInputEvent *event)
             // NOTE: Android key action is 0 for down and 1 for up
             if (AKeyEvent_getAction(event) == AKEY_EVENT_ACTION_DOWN)
             {
-                CORE.Input.Keyboard.currentKeyState[key] = 1;   // Key down
+                INPUT_PRESS_KEY(CORE.Input.Keyboard.currentKeyState[key]);   // Key down
 
                 CORE.Input.Keyboard.keyPressedQueue[CORE.Input.Keyboard.keyPressedQueueCount] = key;
                 CORE.Input.Keyboard.keyPressedQueueCount++;
             }
-            else if (AKeyEvent_getAction(event) == AKEY_EVENT_ACTION_MULTIPLE) CORE.Input.Keyboard.keyRepeatInFrame[key] = 1;
-            else CORE.Input.Keyboard.currentKeyState[key] = 0;  // Key up
+            else if (AKeyEvent_getAction(event) == AKEY_EVENT_ACTION_MULTIPLE)
+            {
+                CORE.Input.Keyboard.keyRepeatInFrame[key] = 1;
+            }
+            else
+            {
+                INPUT_RELEASE_KEY(CORE.Input.Keyboard.currentKeyState[key]);  // Key up
+            }
         }
 
         if (keycode == AKEYCODE_POWER)
@@ -1527,8 +1536,14 @@ static int32_t AndroidInputCallback(struct android_app *app, AInputEvent *event)
     // When all touchpoints are tapped and released really quickly, this event is generated
     if (flags == AMOTION_EVENT_ACTION_CANCEL) CORE.Input.Touch.pointCount = 0;
 
-    if (CORE.Input.Touch.pointCount > 0) CORE.Input.Touch.currentTouchState[MOUSE_BUTTON_LEFT] = 1;
-    else CORE.Input.Touch.currentTouchState[MOUSE_BUTTON_LEFT] = 0;
+    if (CORE.Input.Touch.pointCount > 0)
+    {
+        INPUT_PRESS_KEY(CORE.Input.Touch.currentTouchState[MOUSE_BUTTON_LEFT]);
+    }
+    else
+    {
+        INPUT_RELEASE_KEY(CORE.Input.Touch.currentTouchState[MOUSE_BUTTON_LEFT]);
+    }
 
     // Stores the previous position of touch[0] only while it's active to calculate the delta
     if (flags == AMOTION_EVENT_ACTION_MOVE) CORE.Input.Mouse.previousPosition = CORE.Input.Mouse.currentPosition;
