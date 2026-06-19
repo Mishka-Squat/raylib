@@ -115,7 +115,7 @@ typedef struct {
     // Local storage for the window handle returned by glfwGetX11Window
     // This is needed as X11 handles are integers and may not fit inside a pointer depending on platform
     // Storing the handle locally and returning a pointer in GetWindowHandle allows the code to work regardless of pointer width
-    XID windowHandleX11;
+    Window windowHandleX11;             // Underlying type: unsigned long (XID, Window)
 #endif
 } PlatformData;
 
@@ -764,9 +764,10 @@ void SetWindowFocused(void)
 // Get native window handle
 void *GetWindowHandle(void)
 {
+    void *handle = NULL;
+
 #if defined(_WIN32)
-    // NOTE: Returned handle is: void *HWND (windows.h)
-    return glfwGetWin32Window(platform.handle);
+    handle = glfwGetWin32Window(platform.handle); // Type: HWND
 #endif
 #if defined(__linux__)
     #if defined(_GLFW_WAYLAND)
@@ -774,28 +775,27 @@ void *GetWindowHandle(void)
             int platformID = glfwGetPlatform();
             if (platformID == GLFW_PLATFORM_WAYLAND)
             {
-                return glfwGetWaylandWindow(platform.handle);
+                handle = (void *)glfwGetWaylandWindow(platform.handle); // Type: struct wl_surface*
             }
             else
             {
-                platform.windowHandleX11 = glfwGetX11Window(platform.handle);
-                return &platform.windowHandleX11;
+                platform.windowHandleX11 = glfwGetX11Window(platform.handle); // Type: Window (unsigned long)
+                handle = &platform.windowHandleX11;
             }
         #else
-            return glfwGetWaylandWindow(platform.handle);
+            handle = (void *)glfwGetWaylandWindow(platform.handle);
         #endif
     #elif defined(_GLFW_X11)
-        // Store the window handle localy and return a pointer to the variable instead
+        // Store the window handle locally and return a pointer to the variable instead
         platform.windowHandleX11 = glfwGetX11Window(platform.handle);
-        return &platform.windowHandleX11;
+        handle = &platform.windowHandleX11;
     #endif
 #endif
 #if defined(__APPLE__)
-    // NOTE: Returned handle is: (objc_object *)
-    return (void *)glfwGetCocoaWindow(platform.handle);
+    handle = (void *)glfwGetCocoaWindow(platform.handle); // Type: NSWindow*
 #endif
 
-    return NULL;
+    return handle;
 }
 
 // Get number of monitors
@@ -839,7 +839,7 @@ int GetCurrentMonitor(void)
             // this is probably an overengineered solution for a side case
             // trying to match SDL behaviour
 
-            int closestDist = 0x7FFFFFFF;
+            unsigned int closestDist = 0xFFFFFFFFu;
 
             // Window center position
             int wcx = 0;
@@ -883,7 +883,14 @@ int GetCurrentMonitor(void)
 
                     int dx = wcx - xclosest;
                     int dy = wcy - yclosest;
-                    int dist = (dx*dx) + (dy*dy);
+
+                    // Unsigned to dodge signed overflow UB; (-x)^2 == x^2 mod 2^32 so sign drops out.
+                    // If |dx| or |dy| >= 65536, dist wraps and the wrong monitor may win.
+                    // Not a concern for realistic monitor layouts.
+                    unsigned int ux = (unsigned int)dx;
+                    unsigned int uy = (unsigned int)dy;
+                    unsigned int dist = ux*ux + uy*uy;
+
                     if (dist < closestDist)
                     {
                         index = i;
@@ -1050,11 +1057,6 @@ const char *GetClipboardText(void)
     return glfwGetClipboardString(platform.handle);
 }
 
-#if SUPPORT_CLIPBOARD_IMAGE && defined(__linux__) && defined(_GLFW_X11)
-    #include <X11/Xlib.h>
-    #include <X11/Xatom.h>
-#endif
-
 // Get clipboard image
 Image GetClipboardImage(void)
 {
@@ -1062,43 +1064,42 @@ Image GetClipboardImage(void)
 
 #if SUPPORT_CLIPBOARD_IMAGE && SUPPORT_MODULE_RTEXTURES
 #if defined(_WIN32)
-    unsigned long long int dataSize = 0;
+
+    unsigned int dataSize = 0;
     void *bmpData = NULL;
     int width = 0;
     int height = 0;
 
-    bmpData  = (void *)Win32GetClipboardImageData(&width, &height, &dataSize);
+    bmpData = (void *)Win32GetClipboardImageData(&width, &height, &dataSize);
 
     if (bmpData == NULL) TRACELOG(LOG_WARNING, "Clipboard image: Couldn't get clipboard data.");
     else image = LoadImageFromMemory(".bmp", (const unsigned char *)bmpData, (int)dataSize);
 
 #elif defined(__linux__) && defined(_GLFW_X11)
-
     // REF: https://github.com/ColleagueRiley/Clipboard-Copy-Paste/blob/main/x11.c
-    Display *dpy = XOpenDisplay(NULL);
-    if (!dpy) return image;
 
-    Window root = DefaultRootWindow(dpy);
-    Window win = XCreateSimpleWindow(
-        dpy,      // The connection to the X Server
-        root,     // The 'Parent' window (usually the desktop/root)
-        0, 0,     // X and Y position on the screen
-        1, 1,     // Width and Height (1x1 pixel)
-        0,        // Border width
-        0,        // Border color
-        0         // Background color
-    );
+    static Atom clipboard = 0;
+    static Atom targetType = 0;
+    static Atom property = 0;
 
-    Atom clipboard = XInternAtom(dpy, "CLIPBOARD", False);
-    Atom targetType = XInternAtom(dpy, "image/png", False); // Ask for PNG
-    Atom property = XInternAtom(dpy, "RAYLIB_CLIPBOARD_MANAGER", False);
+    Display *display = glfwGetX11Display();
+    XID window = glfwGetX11Window(platform.handle);
 
-    // Request the data: "Convert whatever is in CLIPBOARD to image/png and put it in RAYLIB_CLIPBOARD_MANAGER"
-    XConvertSelection(dpy, clipboard, targetType, property, win, CurrentTime);
+    // Lazy-load X11 atoms
+    if (clipboard == 0)
+    {
+        clipboard = XInternAtom(display, "CLIPBOARD", False);
+        targetType = XInternAtom(display, "image/png", False);
+        property = XInternAtom(display, "RAYLIB_CLIPBOARD_MANAGER", False);
+    }
 
-    // Wait for the SelectionNotify event
+    XConvertSelection(display, clipboard, targetType, property, window, CurrentTime);
+    XSync(display, 0);
+
     XEvent ev = { 0 };
-    XNextEvent(dpy, &ev);
+
+    // Keep calling until we get SelectionNotify
+    while (XCheckTypedEvent(display, SelectionNotify, &ev) == False);
 
     Atom actualType = { 0 };
     int actualFormat = 0;
@@ -1106,9 +1107,8 @@ Image GetClipboardImage(void)
     unsigned long bytesAfter = 0;
     unsigned char *data = NULL;
 
-    // Read the data from our ghost window's property
-    XGetWindowProperty(dpy, win, property, 0, ~0L, False, AnyPropertyType,
-        &actualType, &actualFormat, &nitems, &bytesAfter, &data);
+    XGetWindowProperty(display, window, property, 0, ~0L, False, AnyPropertyType,
+                       &actualType, &actualFormat, &nitems, &bytesAfter, &data);
 
     if (data != NULL)
     {
@@ -1116,11 +1116,9 @@ Image GetClipboardImage(void)
         XFree(data);
     }
 
-    XDestroyWindow(dpy, win);
-    XCloseDisplay(dpy);
 #else
     TRACELOG(LOG_WARNING, "GetClipboardImage() not implemented on target platform");
-#endif // defined(_WIN32)
+#endif // _WIN32
 #else
     TRACELOG(LOG_WARNING, "Clipboard image: SUPPORT_CLIPBOARD_IMAGE requires SUPPORT_MODULE_RTEXTURES to work properly");
 #endif // SUPPORT_CLIPBOARD_IMAGE
