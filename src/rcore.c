@@ -108,7 +108,7 @@
 
 #include <stdlib.h>                 // Required for: srand(), rand(), exit()
 #include <stdio.h>                  // Required for: FILE, fopen(), fseek(), ftell(), fread(), fwrite(), fprintf(), vprintf(), fclose(), sprintf() [Used in OpenURL()]
-#include <string.h>                 // Required for: strlen(), strncpy(), strcmp(), strrchr(), memset(), strcat()
+#include <string.h>                 // Required for: strlen(), strcmp(), strrchr(), memset(), memcpy(), strcat()
 #include <stdarg.h>                 // Required for: va_list, va_start(), va_end() [Used in TraceLog()]
 #include <time.h>                   // Required for: time() [Used in InitTimer()]
 #include <math.h>                   // Required for: tan() [Used in BeginMode3D()], atan2f() [Used in LoadVrStereoConfig()]
@@ -1860,7 +1860,7 @@ void TakeScreenshot(const char *fileName)
     Image image = { imgData, (int)((float)CORE.Window.render.width*scale.x), (int)((float)CORE.Window.render.height*scale.y), 1, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8 };
 
     char path[MAX_FILEPATH_LENGTH] = { 0 };
-    strncpy(path, TextFormat("%s/%s", CORE.Storage.basePath, fileName), MAX_FILEPATH_LENGTH - 1);
+    snprintf(path, MAX_FILEPATH_LENGTH, "%s", TextFormat("%s/%s", CORE.Storage.basePath, fileName));
 
     ExportImage(image, path); // WARNING: Module required: rtextures
     RL_FREE(imgData);
@@ -1884,8 +1884,6 @@ void SetConfigFlags(unsigned int flags)
     // flag evaluation happens at InitWindow() or SetWindowState()
     FLAG_SET(CORE.Window.flags, flags);
 }
-
-// void OpenURL(const char *url);   // Defined per platform
 
 //----------------------------------------------------------------------------------
 // Module Functions Definition: Logging system
@@ -1929,12 +1927,12 @@ void TraceLog(int logType, const char *text, ...)
 
     switch (logType)
     {
-        case LOG_TRACE: strncpy(buffer, "TRACE: ", 8); break;
-        case LOG_DEBUG: strncpy(buffer, "DEBUG: ", 8); break;
-        case LOG_INFO: strncpy(buffer, "INFO: ", 7); break;
-        case LOG_WARNING: strncpy(buffer, "WARNING: ", 10); break;
-        case LOG_ERROR: strncpy(buffer, "ERROR: ", 8); break;
-        case LOG_FATAL: strncpy(buffer, "FATAL: ", 8); break;
+        case LOG_TRACE: memcpy(buffer, "TRACE: ", 7); break;
+        case LOG_DEBUG: memcpy(buffer, "DEBUG: ", 7); break;
+        case LOG_INFO: memcpy(buffer, "INFO: ", 6); break;
+        case LOG_WARNING: memcpy(buffer, "WARNING: ", 9); break;
+        case LOG_ERROR: memcpy(buffer, "ERROR: ", 7); break;
+        case LOG_FATAL: memcpy(buffer, "FATAL: ", 7); break;
         default: break;
     }
 
@@ -2107,7 +2105,7 @@ bool ExportDataAsCode(const unsigned char *data, int dataSize, const char *fileN
 
     // Get file name from path
     char varFileName[256] = { 0 };
-    strncpy(varFileName, GetFileNameWithoutExt(fileName), 256 - 1);
+    snprintf(varFileName, 256, "%s", GetFileNameWithoutExt(fileName));
     for (int i = 0; varFileName[i] != '\0'; i++)
     {
         // Convert variable name to uppercase
@@ -2551,7 +2549,7 @@ const char *GetFileNameWithoutExt(const char *filePath)
 
     if (filePath != NULL)
     {
-        strncpy(fileName, GetFileName(filePath), MAX_FILENAME_LENGTH - 1); // Get filename.ext without path
+        snprintf(fileName, MAX_FILENAME_LENGTH, "%s", GetFileName(filePath)); // Get filename.ext without path
         int fileNameLength = (int)strlen(fileName); // Get size in bytes
 
         for (int i = fileNameLength; i > 0; i--) // Reverse search '.'
@@ -2605,7 +2603,6 @@ const char *GetDirectoryPath(const char *filePath)
         }
         else
         {
-            // NOTE: Be careful, strncpy() is not safe, it does not care about '\0'
             char *dirPathPtr = dirPath;
             if ((filePath[1] != ':') && (filePath[0] != '\\') && (filePath[0] != '/')) dirPathPtr += 2;     // Skip drive letter, "C:"
             memcpy(dirPathPtr, filePath, strlen(filePath) - (strlen(lastSlash) - 1));
@@ -2623,7 +2620,7 @@ const char *GetPrevDirectoryPath(const char *dirPath)
     memset(prevDirPath, 0, MAX_FILEPATH_LENGTH);
     int dirPathLength = (int)strlen(dirPath);
 
-    if (dirPathLength <= 3) strncpy(prevDirPath, dirPath, MAX_FILEPATH_LENGTH  - 1);
+    if (dirPathLength <= 3) snprintf(prevDirPath, MAX_FILEPATH_LENGTH, "%s", dirPath);
 
     for (int i = (dirPathLength - 1); (i >= 0) && (dirPathLength > 3); i--)
     {
@@ -2632,7 +2629,7 @@ const char *GetPrevDirectoryPath(const char *dirPath)
             // Check for root: "C:\" or "/"
             if (((i == 2) && (dirPath[1] ==':')) || (i == 0)) i++;
 
-            strncpy(prevDirPath, dirPath, i);
+            memcpy(prevDirPath, dirPath, i);
             break;
         }
     }
@@ -2871,10 +2868,24 @@ int ChangeDirectory(const char *dirPath)
 // Check if given path point to a file
 bool IsPathFile(const char *path)
 {
-    struct stat result = { 0 };
-    stat(path, &result);
+    bool result = false;
 
-    return S_ISREG(result.st_mode);
+    struct stat info = { 0 };
+    stat(path, &info);
+
+    if (S_ISREG(info.st_mode)) result = true;
+
+    return result;
+}
+
+// Check if given path point to a directory
+bool IsPathDirectory(const char *path)
+{
+    bool result = false;
+
+    if (!IsPathFile(path)) result = true;
+
+    return result;
 }
 
 // Check if fileName is valid for the platform/OS
@@ -3413,10 +3424,10 @@ unsigned int *ComputeSHA1(const unsigned char *data, int dataSize)
         unsigned int w[80] = { 0 };
         for (int i = 0; i < 16; i++)
         {
-            w[i] = (msg[offset + (i*4) + 0] << 24) |
-                   (msg[offset + (i*4) + 1] << 16) |
-                   (msg[offset + (i*4) + 2] << 8) |
-                   (msg[offset + (i*4) + 3]);
+            w[i] = ((unsigned int)msg[offset + (i*4) + 0] << 24) |
+                   ((unsigned int)msg[offset + (i*4) + 1] << 16) |
+                   ((unsigned int)msg[offset + (i*4) + 2] << 8) |
+                   ((unsigned int)msg[offset + (i*4) + 3]);
         }
 
         // Message schedule: extend the sixteen 32-bit words into eighty 32-bit words:
@@ -4064,7 +4075,7 @@ bool IsGamepadAvailable(int gamepad)
 {
     bool result = false;
 
-    if ((gamepad < MAX_GAMEPADS) && ANY_IS_PRESSED(CORE.Input.Gamepad.ready[gamepad])) result = true;
+    if ((gamepad >= 0) && (gamepad < MAX_GAMEPADS) && ANY_IS_PRESSED(CORE.Input.Gamepad.ready[gamepad])) result = true;
 
     return result;
 }
@@ -4072,7 +4083,11 @@ bool IsGamepadAvailable(int gamepad)
 // Get gamepad internal name id
 const char *GetGamepadName(int gamepad)
 {
-    return CORE.Input.Gamepad.name[gamepad];
+    const char *name = NULL;
+
+    if ((gamepad >= 0) && (gamepad < MAX_GAMEPADS)) name = CORE.Input.Gamepad.name[gamepad];
+
+    return name;
 }
 
 // Check if gamepad button has been pressed once
@@ -4080,7 +4095,7 @@ bool IsGamepadButtonPressed(int gamepad, int button)
 {
     bool pressed = false;
 
-    if ((gamepad < MAX_GAMEPADS) && ANY_IS_PRESSED(CORE.Input.Gamepad.ready[gamepad]) && (button < MAX_GAMEPAD_BUTTONS))
+    if ((gamepad >= 0) && (gamepad < MAX_GAMEPADS) && ANY_IS_PRESSED(CORE.Input.Gamepad.ready[gamepad]) && (button < MAX_GAMEPAD_BUTTONS))
     {
         if (!ANY_IS_PRESSED(CORE.Input.Gamepad.previousButtonState[gamepad][button]) && ANY_IS_PRESSED(CORE.Input.Gamepad.currentButtonState[gamepad][button])) pressed = true;
     }
@@ -4093,7 +4108,7 @@ bool IsGamepadButtonDown(int gamepad, int button)
 {
     bool down = false;
 
-    if ((gamepad < MAX_GAMEPADS) && ANY_IS_PRESSED(CORE.Input.Gamepad.ready[gamepad]) && (button < MAX_GAMEPAD_BUTTONS))
+    if ((gamepad >= 0) && (gamepad < MAX_GAMEPADS) && ANY_IS_PRESSED(CORE.Input.Gamepad.ready[gamepad]) && (button < MAX_GAMEPAD_BUTTONS))
     {
         if (ANY_IS_PRESSED(CORE.Input.Gamepad.currentButtonState[gamepad][button])) down = true;
     }
@@ -4106,7 +4121,7 @@ bool IsGamepadButtonReleased(int gamepad, int button)
 {
     bool released = false;
 
-    if ((gamepad < MAX_GAMEPADS) && ANY_IS_PRESSED(CORE.Input.Gamepad.ready[gamepad]) && (button < MAX_GAMEPAD_BUTTONS))
+    if ((gamepad >= 0) && (gamepad < MAX_GAMEPADS) && ANY_IS_PRESSED(CORE.Input.Gamepad.ready[gamepad]) && (button < MAX_GAMEPAD_BUTTONS))
     {
         if (ANY_IS_PRESSED(CORE.Input.Gamepad.previousButtonState[gamepad][button]) && !ANY_IS_PRESSED(CORE.Input.Gamepad.currentButtonState[gamepad][button])) released = true;
     }
@@ -4119,7 +4134,7 @@ bool IsGamepadButtonUp(int gamepad, int button)
 {
     bool up = false;
 
-    if ((gamepad < MAX_GAMEPADS) && ANY_IS_PRESSED(CORE.Input.Gamepad.ready[gamepad]) && (button < MAX_GAMEPAD_BUTTONS))
+    if ((gamepad >= 0) && (gamepad < MAX_GAMEPADS) && ANY_IS_PRESSED(CORE.Input.Gamepad.ready[gamepad]) && (button < MAX_GAMEPAD_BUTTONS))
     {
         if (!ANY_IS_PRESSED(CORE.Input.Gamepad.currentButtonState[gamepad][button])) up = true;
     }
@@ -4137,7 +4152,11 @@ int GetGamepadButtonPressed(void)
 // Get gamepad axis count
 int GetGamepadAxisCount(int gamepad)
 {
-    return CORE.Input.Gamepad.axisCount[gamepad];
+    int result = 0;
+
+    if ((gamepad >= 0) && (gamepad < MAX_GAMEPADS)) result = CORE.Input.Gamepad.axisCount[gamepad];
+
+    return result;
 }
 
 // Get axis movement vector for a gamepad
@@ -4145,7 +4164,7 @@ float GetGamepadAxisMovement(int gamepad, int axis)
 {
     float value = ((axis == GAMEPAD_AXIS_LEFT_TRIGGER) || (axis == GAMEPAD_AXIS_RIGHT_TRIGGER))? -1.0f : 0.0f;
 
-    if ((gamepad < MAX_GAMEPADS) && ANY_IS_PRESSED(CORE.Input.Gamepad.ready[gamepad]) && (axis < MAX_GAMEPAD_AXES))
+    if ((gamepad >= 0) && (gamepad < MAX_GAMEPADS) && ANY_IS_PRESSED(CORE.Input.Gamepad.ready[gamepad]) && (axis < MAX_GAMEPAD_AXES))
     {
         float movement = (value < 0.0f)? CORE.Input.Gamepad.axisState[gamepad][axis] : fabsf(CORE.Input.Gamepad.axisState[gamepad][axis]);
 

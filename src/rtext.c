@@ -58,8 +58,8 @@
 #include "rlgl.h"           // OpenGL abstraction layer to OpenGL 1.1, 2.1, 3.3+ or ES2 -> Only DrawTextPro()
 
 #include <stdlib.h>         // Required for: malloc(), free()
-#include <stdio.h>          // Required for: vsprintf()
-#include <string.h>         // Required for: strcmp(), strstr(), strncpy() [Used in TextReplace()], sscanf() [Used in LoadBMFont()]
+#include <stdio.h>          // Required for: vsprintf(), snprintf()
+#include <string.h>         // Required for: strcmp(), strstr(), strncpy(), sscanf() [Used in LoadBMFont()]
 #include <stdarg.h>         // Required for: va_list, va_start(), vsprintf(), va_end() [Used in TextFormat()]
 #include <ctype.h>          // Required for: toupper(), tolower() [Used in TextToUpper(), TextToLower()]
 
@@ -536,7 +536,7 @@ Font LoadFontFromMemory(const char *fileType, const unsigned char *fileData, int
     Font font = { 0 };
 
     char fileExtLower[16] = { 0 };
-    strncpy(fileExtLower, TextToLower(fileType), 16 - 1);
+    snprintf(fileExtLower, 16, "%s", TextToLower(fileType));
 
     font.baseSize = fontSize;
     font.glyphPadding = 0;
@@ -1034,7 +1034,7 @@ bool ExportFontAsCode(Font font, const char *fileName)
 
     // Get file name from path
     char fileNamePascal[256] = { 0 };
-    strncpy(fileNamePascal, TextToPascal(GetFileNameWithoutExt(fileName)), 256 - 1);
+    snprintf(fileNamePascal, 256, "%s", TextToPascal(GetFileNameWithoutExt(fileName)));
 
     // Get font atlas image and size, required to estimate code file size
     // NOTE: This mechanism is highly coupled to raylib
@@ -1570,7 +1570,7 @@ char **LoadTextLines(const char *text, int *count)
             if ((text[i] == '\n') || (text[i] == '\0'))
             {
                 lines[l] = (char *)RL_CALLOC(lineLen + 1, 1);
-                strncpy(lines[l], &text[i - lineLen], lineLen);
+                memcpy(lines[l], &text[i - lineLen], lineLen);
                 lineLen = 0;
                 l++;
             }
@@ -1818,8 +1818,8 @@ char *GetTextBetween(const char *text, const char *begin, const char *end)
         {
             endIndex += (beginIndex + beginLen);
             int len = (endIndex - beginIndex - beginLen);
-            if (len < (MAX_TEXT_BUFFER_LENGTH - 1)) strncpy(buffer, text + beginIndex + beginLen, len);
-            else strncpy(buffer, text + beginIndex + beginLen, MAX_TEXT_BUFFER_LENGTH - 1);
+            if (len < (MAX_TEXT_BUFFER_LENGTH - 1)) memcpy(buffer, text + beginIndex + beginLen, len);
+            else snprintf(buffer, MAX_TEXT_BUFFER_LENGTH, "%s", text + beginIndex + beginLen);
         }
     }
 
@@ -1827,7 +1827,7 @@ char *GetTextBetween(const char *text, const char *begin, const char *end)
 }
 
 // Replace text string
-// REQUIRES: strstr(), strncpy()
+// REQUIRES: strstr(), memcpy()
 // NOTE: Limited text replace functionality, using static string
 char *TextReplace(const char *text, const char *search, const char *replacement)
 {
@@ -1884,7 +1884,7 @@ char *TextReplace(const char *text, const char *search, const char *replacement)
 
             // Copy remaind text part after replacement to result (pointed by moving temp)
             // NOTE: Text pointer internal copy has been updated along the process
-            strncpy(tempPtr, text, TextLength(text));
+            memcpy(tempPtr, text, TextLength(text));
         }
         else TRACELOG(LOG_WARNING, "Text with replacement is longer than internal buffer, use TextReplaceAlloc()");
     }
@@ -1893,7 +1893,7 @@ char *TextReplace(const char *text, const char *search, const char *replacement)
 }
 
 // Replace text string
-// REQUIRES: strstr(), strncpy()
+// REQUIRES: strstr(), memcpy()
 // WARNING: Allocated memory must be manually freed
 char *TextReplaceAlloc(const char *text, const char *search, const char *replacement)
 {
@@ -1950,7 +1950,7 @@ char *TextReplaceAlloc(const char *text, const char *search, const char *replace
 
             // Copy remaind text part after replacement to result (pointed by moving temp)
             // NOTE: Text pointer internal copy has been updated along the process
-            strncpy(temp, text, TextLength(text));
+            memcpy(temp, text, TextLength(text));
         }
     }
 
@@ -1982,9 +1982,13 @@ char *TextReplaceBetween(const char *text, const char *begin, const char *end, c
                 int replaceLen = (replacement == NULL)? 0 : TextLength(replacement);
                 //int toreplaceLen = endIndex - beginIndex - beginLen;
 
-                strncpy(buffer, text, beginIndex + beginLen); // Copy first text part
-                if (replacement != NULL) strncpy(buffer + beginIndex + beginLen, replacement, replaceLen); // Copy replacement (if provided)
-                strncpy(buffer + beginIndex + beginLen + replaceLen, text + endIndex, textLen - endIndex); // Copy end text part
+                if ((beginIndex + beginLen + replaceLen + (textLen - endIndex)) < (MAX_TEXT_BUFFER_LENGTH - 1))
+                {
+                    strncpy(buffer, text, beginIndex + beginLen); // Copy first text part
+                    if (replacement != NULL) strncpy(buffer + beginIndex + beginLen, replacement, replaceLen); // Copy replacement (if provided)
+                    strncpy(buffer + beginIndex + beginLen + replaceLen, text + endIndex, textLen - endIndex); // Copy end text part
+                }
+                else TRACELOG(LOG_WARNING, "TEXT: Text with replaced string is longer than internal buffer (MAX_TEXT_BUFFER_LENGTH)");
             }
         }
     }
@@ -2259,18 +2263,43 @@ char *TextToSnake(const char *text)
     if (text != NULL)
     {
         // Check for next separator to upper case another character
-        for (int i = 0, j = 0; (i < MAX_TEXT_BUFFER_LENGTH - 1) && (text[j] != '\0'); i++, j++)
+        for (int i = 0, j = 0; (i < MAX_TEXT_BUFFER_LENGTH - 1) && (text[j] != '\0'); j++)
         {
-            if ((text[j] >= 'A') && (text[j] <= 'Z'))
+            if (text[j] == ' ')
             {
-                if (i >= 1)
+                if ((i > 0) && (buffer[i - 1] != '_'))
                 {
                     buffer[i] = '_';
                     i++;
                 }
-                buffer[i] = text[j] + 32;
             }
-            else buffer[i] = text[j];
+            else if ((text[j] >= 'A') && (text[j] <= 'Z'))
+            {
+                if ((i > 0) && (buffer[i - 1] != '_'))
+                {
+                    char prev = text[j - 1];
+                    char next = text[j + 1];
+
+                    // Considering multiple cap leters to be on single word (HTTPRequest --> http_request)
+                    if (((prev >= 'a') && (prev <= 'z')) ||
+                        (((prev >= 'A') && (prev <= 'Z')) && ((next >= 'a') && (next <= 'z'))))
+                    {
+                        if (i < MAX_TEXT_BUFFER_LENGTH - 2)
+                        {
+                            buffer[i] = '_';
+                            i++;
+                        }
+                    }
+                }
+
+                buffer[i] = text[j] + 32;
+                i++;
+            }
+            else
+            {
+                buffer[i] = text[j];
+                i++;
+            }
         }
     }
 
