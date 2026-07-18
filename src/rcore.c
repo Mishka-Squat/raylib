@@ -1894,6 +1894,8 @@ int GetTraceLogLevel() { return logTypeLevel; }
 // Set the current threshold (minimum) log level
 void SetTraceLogLevel(int logType) { logTypeLevel = logType; }
 
+// TODO(iga): implement https://raw.githubusercontent.com/dosshell/tinycsocket/master/include/tinycsocket.h trace log communication with go lang
+
 // Show trace log messages (LOG_INFO, LOG_WARNING, LOG_ERROR, LOG_DEBUG)
 void TraceLog(int logType, const char *text, ...)
 {
