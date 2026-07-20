@@ -1216,6 +1216,52 @@ Image GenImageText(int width, int height, const char *text)
 
     return image;
 }
+
+float StbPerlinNoise3(float x, float y, float z, int xWrap, int yWrap, int zWrap)
+{
+    return stb_perlin_noise3(x, y, z, xWrap, yWrap, zWrap);
+}
+
+float StbPerlinNoise3Seed(float x, float y, float z, int xWrap, int yWrap, int zWrap, int seed)
+{
+    return stb_perlin_noise3_seed(x, y, z, xWrap, yWrap, zWrap, seed);
+}
+
+float StbPerlinRidgeNoise3(float x, float y, float z, float lacunarity, float gain, float offset, int octaves)
+{
+    return stb_perlin_ridge_noise3(x, y, z, lacunarity, gain, offset, octaves);
+}
+
+float StbPerlinFbmNoise3(float x, float y, float z, float lacunarity, float gain, int octaves)
+{
+    return stb_perlin_fbm_noise3(x, y, z, lacunarity, gain, octaves);
+}
+
+float StbPerlinTurbulenceNoise3(float x, float y, float z, float lacunarity, float gain, int octaves)
+{
+    return stb_perlin_turbulence_noise3(x, y, z, lacunarity, gain, octaves);
+}
+
+float StbPerlinNoise3WrapNonpow2(float x, float y, float z, int xWrap, int yWrap, int zWrap, unsigned char seed)
+{
+    return stb_perlin_noise3_wrap_nonpow2(x, y, z, xWrap, yWrap, zWrap, seed);
+}
+
+float GenPerlinNoise2(float x, float y)
+{
+    return GenPerlinNoise3(x, y, 1.0f);
+}
+
+float GenPerlinNoise3(float x, float y, float z)
+{
+    // Calculate a better perlin noise using fbm (fractal brownian motion)
+            // Typical values to start playing with:
+            //   lacunarity = ~2.0   -- spacing between successive octaves (use exactly 2.0 for wrapping output)
+            //   gain       =  0.5   -- relative weighting applied to each successive octave
+            //   octaves    =  6     -- number of "octaves" of noise3() to sum
+    return stb_perlin_fbm_noise3(x, y, z, 2.0f, 0.5f, 6);
+}
+
 #endif // SUPPORT_IMAGE_GENERATION
 
 //------------------------------------------------------------------------------------

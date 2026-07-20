@@ -1397,6 +1397,18 @@ RLAPI Image GenImagePerlinNoise(int width, int height, int offsetX, int offsetY,
 RLAPI Image GenImageCellular(int width, int height, int tileSize);                                       // Generate image: cellular algorithm, bigger tileSize means bigger cells
 RLAPI Image GenImageText(int width, int height, const char *text);                                       // Generate image: grayscale image from text data
 
+// Perlin noise functions
+RLAPI float StbPerlinNoise3(float x, float y, float z, int xWrap, int yWrap, int zWrap);
+RLAPI float StbPerlinNoise3Seed(float x, float y, float z, int xWrap, int yWrap, int zWrap, int seed);
+RLAPI float StbPerlinRidgeNoise3(float x, float y, float z, float lacunarity, float gain, float offset, int octaves);
+RLAPI float StbPerlinFbmNoise3(float x, float y, float z, float lacunarity, float gain, int octaves);
+RLAPI float StbPerlinTurbulenceNoise3(float x, float y, float z, float lacunarity, float gain, int octaves);
+RLAPI float StbPerlinNoise3WrapNonpow2(float x, float y, float z, int xWrap, int yWrap, int zWrap, unsigned char seed);
+
+RLAPI float GenPerlinNoise2(float x, float y);
+RLAPI float GenPerlinNoise3(float x, float y, float z);
+
+
 // Image manipulation functions
 RLAPI Image ImageCopy(Image image);                                                                      // Create an image duplicate (useful for transformations)
 RLAPI Image ImageFromImage(Image image, Rectangle rec);                                                  // Create an image from another image piece
