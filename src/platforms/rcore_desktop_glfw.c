@@ -2209,13 +2209,13 @@ static void CursorEnterCallback(GLFWwindow *window, int entered)
 {
     if (entered)
     {
-        // NOTE: Mouse position updated by MouseCursorPosCallback()
         CORE.Input.Mouse.cursorOnScreen = true;
     }
     else
     {
         CORE.Input.Mouse.cursorOnScreen = false;
-        CORE.Input.Mouse.currentPosition = (Vector2){ 0 };
+        // Do not zero mouse cursor position on window focus lost
+        //CORE.Input.Mouse.currentPosition = (Vector2){ 0 };
     }
 }
 
