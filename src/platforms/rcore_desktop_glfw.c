@@ -1473,6 +1473,20 @@ int InitPlatform(void)
 #if defined(__APPLE__)
     glfwInitHint(GLFW_COCOA_CHDIR_RESOURCES, GLFW_FALSE);
 #endif
+
+#if defined(GRAPHICS_API_OPENGL_ES2) || defined(GRAPHICS_API_OPENGL_ES3)
+    // Force the ANGLE backend used to implement the EGL/GLES context requested below.
+    // Harmless when libEGL is not ANGLE (e.g. native Mesa GLES): GLFW only applies
+    // this hint if the loaded libEGL reports the EGL_ANGLE_platform_angle extension.
+    #if defined(_WIN32)
+        glfwInitHint(GLFW_ANGLE_PLATFORM_TYPE, GLFW_ANGLE_PLATFORM_TYPE_D3D11);
+    #elif defined(__APPLE__)
+        glfwInitHint(GLFW_ANGLE_PLATFORM_TYPE, GLFW_ANGLE_PLATFORM_TYPE_METAL);
+    #else
+        glfwInitHint(GLFW_ANGLE_PLATFORM_TYPE, GLFW_ANGLE_PLATFORM_TYPE_VULKAN);
+    #endif
+#endif
+
     // Initialize GLFW internal global state
     int result = glfwInit();
     if (result == GLFW_FALSE) { TRACELOG(LOG_WARNING, "GLFW: Failed to initialize GLFW"); return -1; }
